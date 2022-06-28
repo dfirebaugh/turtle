@@ -1,0 +1,8 @@
+title: turtle
+window:
+  height: 128
+  width: 128
+scale-factor: 2
+debug: true
+debug-collidables: false
+use-opengl: true
