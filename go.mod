@@ -6,13 +6,13 @@ require (
 	github.com/atedja/go-vector v0.0.0-20170318030839-a887ff7bead7
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220320163800-277f93cfa958
 	github.com/hajimehoshi/ebiten/v2 v2.3.5
-	github.com/sirupsen/logrus v1.8.1
 	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
 	golang.org/x/image v0.0.0-20220617043117-41969df76e82
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 // indirect
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6 // indirect
 )

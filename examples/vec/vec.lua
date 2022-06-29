@@ -26,10 +26,11 @@ function UPDATE()
 end
 
 function RENDER()
-    clear()
-    rect(64,64,10,10,1)
-    line(0,0,SCREENW(), SCREENH(), 10)
-    circle(64, 64, 10, 10)
-
-    circle(a.x, a.y, a.r, a.c)
+    CLS()
+    RECT(64,64,10,10,1)
+    LINE(0,0,SCREENW(), SCREENH(), 10)
+    LINE(SCREENW()/2,0, SCREENW()/2, SCREENH(), 10)
+    CIR(64, 64, 10, 10)
+    CIR(a.x, a.y, a.r, a.c)
+    PALLETTE()
 end

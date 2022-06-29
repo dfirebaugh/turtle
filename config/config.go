@@ -21,6 +21,11 @@ type Config struct {
 	Engine                  uint   `yaml:"engine"`
 }
 
+const (
+	ScreenHeight = 128
+	ScreenWidth  = 128
+)
+
 //go:embed config.yml
 var ConfigRaw []byte
 

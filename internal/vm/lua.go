@@ -5,23 +5,42 @@ import (
 	"math/rand"
 	"time"
 	"turtle/config"
-	"turtle/internal/graphics"
 	"turtle/internal/pallette"
 	"turtle/pkg/gamemath"
 
+	"github.com/google/uuid"
 	lua "github.com/yuin/gopher-lua"
 )
 
-type LuaVM struct {
-	gp      *graphics.GraphicsPipeline
-	globals map[string]lua.LGFunction
+type GraphicsPipeline interface {
+	Rect(rect gamemath.Rect, color pallette.Color)
+	Line(v0 gamemath.Vector, v1 gamemath.Vector, stroke float64, color pallette.Color)
+	Circ(circle gamemath.Circle, color pallette.Color)
+	Clear()
 }
 
-func NewLuaVM(gp *graphics.GraphicsPipeline, L *lua.LState) LuaVM {
+type FontPipeline interface {
+	PrintAt(string, int, int)
+}
+
+type LuaVM struct {
+	gp      GraphicsPipeline
+	fp      FontPipeline
+	globals map[string]lua.LGFunction
+	tick    *uint
+}
+
+// world clock
+var tick uint = 1
+
+func NewLuaVM(gp GraphicsPipeline, fp FontPipeline, L *lua.LState) LuaVM {
 	lvm := LuaVM{
-		gp: gp,
+		gp:   gp,
+		fp:   fp,
+		tick: &tick,
 	}
 	lvm.setGlobals(L)
+	lvm.initializeTick()
 
 	return lvm
 }
@@ -36,17 +55,20 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"CIR":         lvm.MakeCircle,
 		"LINE":        lvm.MakeLine,
 		"CLS":         lvm.Clear,
+		"CLR":         lvm.Clear,
 		"COS":         lvm.Cos,
 		"SIN":         lvm.Sin,
 		"HEADING":     lvm.GetHeading,
+		"NOW":         lvm.GetTick,
+		"PALLETTE":    lvm.renderPallette,
+		"ATAN":        lvm.Atan,
+		"PI":          lvm.Pi,
+		"UID":         lvm.UID,
+		"PRINTAT":     lvm.PrintAt,
 	}
 	for key, fn := range globals {
 		L.SetGlobal(key, L.NewFunction(fn))
 	}
-	// L.SetGlobal("RECT", L.NewFunction(lvm.MakeRect))
-	// L.SetGlobal("CIR", L.NewFunction(lvm.MakeCircle))
-	// L.SetGlobal("LINE", L.NewFunction(lvm.MakeLine))
-	// L.SetGlobal("CLS", L.NewFunction(lvm.Clear))
 }
 
 func (LuaVM) getScreenHeight(L *lua.LState) int {
@@ -64,7 +86,7 @@ func (l LuaVM) Clear(L *lua.LState) int {
 }
 
 func (l LuaVM) PrintAt(L *lua.LState) int {
-	// l.gp.Print()
+	l.fp.PrintAt(L.ToString(1), int(L.ToNumber(2)), int(L.ToNumber(3)))
 	return 0
 }
 
@@ -77,7 +99,6 @@ func (l LuaVM) MakeRect(L *lua.LState) int {
 	w := float64(L.ToNumber(3))
 	h := float64(L.ToNumber(4))
 	color := int(L.ToNumber(5))
-	// l.gp.Rect(gamemath.MakeRect(x-1, y-1, w+2, h+2), 1)
 	l.gp.Rect(gamemath.MakeRect(x, y, w, h), pallette.Color(color))
 	return 0
 }
@@ -106,7 +127,7 @@ func (l LuaVM) MakeCircle(L *lua.LState) int {
 }
 
 func (LuaVM) random(state *lua.LState) int {
-	rand.Seed(time.Now().UnixNano())
+	// rand.Seed(time.Now().UnixNano())
 	state.Push(lua.LNumber(rand.Intn(state.ToInt(1))))
 	return 1
 }
@@ -123,18 +144,53 @@ func (LuaVM) Cos(state *lua.LState) int {
 	return 1
 }
 
-func (LuaVM) GetHeading(state *lua.LState) int {
-	v0 := gamemath.MakeVector(float64(state.ToNumber(1)), float64(state.ToNumber(2)))
-	v1 := gamemath.MakeVector(float64(state.ToNumber(3)), float64(state.ToNumber(4)))
-	state.Push(lua.LNumber(v0.GetHeading(v1)))
-	return 1
-}
-
 func (LuaVM) Sin(state *lua.LState) int {
 	n := float64(state.ToNumber(1))
 
 	state.Push(lua.LNumber(math.Sin(n)))
 	return 1
+}
+func (LuaVM) Atan(state *lua.LState) int {
+	n := float64(state.ToNumber(1))
+
+	state.Push(lua.LNumber(math.Atan(n)))
+	return 1
+}
+func (LuaVM) Pi(state *lua.LState) int {
+	state.Push(lua.LNumber(math.Pi))
+	return 1
+}
+func (LuaVM) UID(state *lua.LState) int {
+	id, _ := uuid.NewUUID()
+	state.Push(lua.LNumber(id.ID()))
+	return 1
+}
+
+func (LuaVM) GetHeading(state *lua.LState) int {
+	x0 := float64(state.ToNumber(1))
+	y0 := float64(state.ToNumber(2))
+	x1 := float64(state.ToNumber(3))
+	y1 := float64(state.ToNumber(4))
+	v0 := gamemath.MakeVector(x0, y0)
+	v1 := gamemath.MakeVector(x1, y1)
+	state.Push(lua.LNumber(v0.GetHeading(v1)))
+	return 1
+}
+
+func (l LuaVM) GetTick(state *lua.LState) int {
+	state.Push(lua.LNumber(*l.tick))
+	return 1
+}
+
+func (l LuaVM) renderPallette(state *lua.LState) int {
+	w := float64(config.Get().Window.Width / len(pallette.Colors))
+	for i := range pallette.Colors {
+		x := float64(i)*w + w
+		y := float64(config.Get().Window.Height) - w
+		h := w
+		l.gp.Rect(gamemath.MakeRect(x, y, w, h), pallette.Color(i))
+	}
+	return 0
 }
 
 func (LuaVM) Init(state *lua.LState) {
@@ -163,4 +219,21 @@ func (LuaVM) DrawCalls(state *lua.LState) {
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
 		panic(err)
 	}
+}
+
+func (l LuaVM) initializeTick() {
+	ticker := time.NewTicker(time.Second)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				rand.Seed(time.Now().UnixNano())
+				tick++
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }
