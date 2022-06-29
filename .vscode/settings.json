@@ -1,0 +1,15 @@
+{
+    "Lua.diagnostics.globals": [
+        "SCALEFACTOR",
+        "RND",
+        "SCREENW",
+        "SCREENH",
+        "RECT",
+        "CLS",
+        "CIR",
+        "CIRC",
+        "COS",
+        "SIN",
+        "HEADING"
+    ]
+}
