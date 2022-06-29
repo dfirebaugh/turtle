@@ -21,6 +21,10 @@ func New(memory memory) Vector {
 	}
 }
 
+func (v Vector) Point(x uint8, y uint8, color pallette.Color) {
+	v.memory.Put(x, y, color)
+}
+
 func (v Vector) Rect(rect gamemath.Rect, color pallette.Color) {
 	x0 := rect[0]
 	y0 := rect[1]
@@ -43,7 +47,8 @@ func (v Vector) Line(v0 gamemath.Vector, v1 gamemath.Vector, stroke float64, col
 		v.memory.Put(uint8(x+(float64(i)*dx)), uint8(y+(float64(i)*dy)), color)
 	}
 }
-func (v Vector) Circ(c gamemath.Circle, color pallette.Color) {
+
+func (v Vector) CircleOutline(c gamemath.Circle, color pallette.Color) {
 	for i := 0; i < 360; i++ {
 		x1 := c.R * math.Cos(float64(i)*math.Pi/180)
 		y1 := c.R * math.Sin(float64(i)*math.Pi/180)
@@ -51,6 +56,17 @@ func (v Vector) Circ(c gamemath.Circle, color pallette.Color) {
 		v.memory.Put(uint8(c.X+x1+c.R), uint8(c.Y+y1+c.R), color)
 	}
 }
+func (v Vector) Circ(c gamemath.Circle, color pallette.Color) {
+	v.CircleDumbFill(c, color)
+	v.CircleOutline(c, color)
+}
+
+// DumbFill draws a rect inside the circle
+// it doesn't fit though :3
+func (v Vector) CircleDumbFill(c gamemath.Circle, color pallette.Color) {
+	v.Rect(gamemath.MakeRect(c.X+2, c.Y+2, c.R*2-3, c.R*2-3), 11)
+}
+
 func (v Vector) Tri(a, b, c uint8) {
 
 }

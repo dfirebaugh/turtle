@@ -16,6 +16,7 @@ type GraphicsPipeline interface {
 	Rect(rect gamemath.Rect, color pallette.Color)
 	Line(v0 gamemath.Vector, v1 gamemath.Vector, stroke float64, color pallette.Color)
 	Circ(circle gamemath.Circle, color pallette.Color)
+	Point(x uint8, y uint8, color pallette.Color)
 	Clear()
 }
 
@@ -54,6 +55,7 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"RECT":        lvm.MakeRect,
 		"CIR":         lvm.MakeCircle,
 		"LINE":        lvm.MakeLine,
+		"POINT":       lvm.MakePoint,
 		"CLS":         lvm.Clear,
 		"CLR":         lvm.Clear,
 		"COS":         lvm.Cos,
@@ -111,6 +113,14 @@ func (l LuaVM) MakeLine(L *lua.LState) int {
 
 	c := pallette.Color(L.ToNumber(5))
 	l.gp.Line(gamemath.MakeVector(x0, y0), gamemath.MakeVector(x1, y1), 1, c)
+	return 0
+}
+func (l LuaVM) MakePoint(L *lua.LState) int {
+	x := uint8(L.ToNumber(1))
+	y := uint8(L.ToNumber(2))
+	c := pallette.Color(L.ToNumber(3))
+
+	l.gp.Point(x, y, c)
 	return 0
 }
 

@@ -1,7 +1,7 @@
 
 local World={}
 local size=6
-local speed=0.4
+local speed=0.8
 local CollisionBody={}
 
 local function isAxisAlignedCollision(cb0, cb1)
@@ -39,7 +39,7 @@ function Entity:new(x, y)
     this.id=UID()
 
     function this:render()
-        RECT(this.x, this.y, this.size*2+1, this.size*2+1, 1);
+        -- RECT(this.x, this.y, this.size*2+1, this.size*2+1, 1);
         CIR(this.x, this.y, this.size, this.color);
     end
 
@@ -76,13 +76,13 @@ function Entity:new(x, y)
         end
         this.move()
 
-        -- for _, e in pairs(World) do
-        --     if this.id ~= e.id then
-        --         if isAxisAlignedCollision(CollisionBody:Create(this), CollisionBody:Create(e)) then
-        --             this.dir = HEADING(this.x, this.y, e.x, e.y)
-        --         end
-        --     end
-        -- end
+        for _, e in pairs(World) do
+            if this.id ~= e.id then
+                if isAxisAlignedCollision(CollisionBody:Create(this), CollisionBody:Create(e)) then
+                    this.dir = HEADING(this.x, this.y, e.x, e.y)
+                end
+            end
+        end
     end
 
     return this
