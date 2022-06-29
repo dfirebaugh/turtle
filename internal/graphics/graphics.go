@@ -2,11 +2,22 @@ package graphics
 
 import (
 	"image/color"
+	"turtle/config"
+	"turtle/internal/graphics/ebitenrunner"
+	"turtle/internal/graphics/ebitenrunner/ebitenwrapper"
 	"turtle/internal/graphics/glrunner"
 	"turtle/internal/graphics/pixelglrunner"
 	"turtle/internal/graphics/shapes"
 	"turtle/internal/pallette"
 	"turtle/pkg/gamemath"
+)
+
+type Engine uint
+
+const (
+	OpenGL Engine = iota
+	Ebiten
+	Pixel
 )
 
 type scene interface {
@@ -39,15 +50,16 @@ type GraphicsPipeline struct {
 }
 
 func (g *GraphicsPipeline) Run(cart Cart) {
-	// if config.Get().UseOpenGL {
-	// 	runner := g.gl(cart)
-	// 	runner.Run()
-	// 	return
-	// }
-	// runner := g.ebiten(cart)
-	// runner.Run()
-
-	g.pixelgl(cart).Run()
+	switch Engine(config.Get().Engine) {
+	case OpenGL:
+		g.pixelgl(cart).Run()
+	case Pixel:
+		g.pixelgl(cart).Run()
+	case Ebiten:
+		g.ebiten(cart).Run()
+	default:
+		g.pixelgl(cart).Run()
+	}
 }
 
 func (g *GraphicsPipeline) Circ(circle gamemath.Circle, color pallette.Color) {
@@ -80,29 +92,29 @@ func (g *GraphicsPipeline) Clear() {
 	g.shapes = []shapes.Shape{}
 }
 
-// func (g *GraphicsPipeline) ebiten(cart Cart) runner {
-// 	cartRunner := &ebitenrunner.CartRunner{Cart: cart}
-// 	systems := []ebitenrunner.System{
-// 		cartRunner,
-// 	}
+func (g *GraphicsPipeline) ebiten(cart Cart) runner {
+	cartRunner := &ebitenrunner.CartRunner{Cart: cart}
+	systems := []ebitenrunner.System{
+		cartRunner,
+	}
 
-// 	drawables := []ebitenrunner.Drawable{
-// 		cartRunner,
-// 		ebitenrunner.ShapeRenderer{
-// 			Shapes: &g.shapes,
-// 			Debug:  &g.debug,
-// 		},
-// 	}
+	drawables := []ebitenrunner.Drawable{
+		cartRunner,
+		ebitenrunner.ShapeRenderer{
+			Shapes: &g.shapes,
+			Debug:  &g.debug,
+		},
+	}
 
-// 	return &ebitenwrapper.Game{
-// 		Scene:           ebitenrunner.New(systems, drawables),
-// 		WindowTitle:     g.WindowTitle,
-// 		WindowScale:     g.WindowScale,
-// 		Width:           g.Width,
-// 		Height:          g.Height,
-// 		BackgroundColor: g.BackgroundColor,
-// 	}
-// }
+	return &ebitenwrapper.Game{
+		Scene:           ebitenrunner.New(systems, drawables),
+		WindowTitle:     g.WindowTitle,
+		WindowScale:     g.WindowScale,
+		Width:           g.Width,
+		Height:          g.Height,
+		BackgroundColor: g.BackgroundColor,
+	}
+}
 
 func (g *GraphicsPipeline) gl(cart Cart) runner {
 	return &glrunner.Game{
@@ -113,6 +125,7 @@ func (g *GraphicsPipeline) gl(cart Cart) runner {
 		BackgroundColor: g.BackgroundColor,
 	}
 }
+
 func (g *GraphicsPipeline) pixelgl(cart Cart) runner {
 	cartRunner := &pixelglrunner.CartRunner{
 		Cart: cart,

@@ -2,7 +2,6 @@ package main
 
 import (
 	_ "embed"
-	"turtle/internal/fb"
 	"turtle/internal/vm"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,22 +12,19 @@ import (
 var LuaScript string
 
 type gameRunner struct {
-	fb    *fb.FrameBuffer
 	state *lua.LState
 }
 
-func NewGameRunner(f *fb.FrameBuffer) gameRunner {
-	frameBuffer := f
+func NewGameRunner() gameRunner {
 	state := lua.NewState()
 	if err := state.DoString(LuaScript); err != nil {
 		panic(err)
 	}
 	state.SetGlobal("rect", state.NewFunction(vm.MakeRect(f)))
-	state.SetGlobal("clear", state.NewFunction(vm.ClearFB(f)))
+	state.SetGlobal("clear", state.NewFunction(vm.Clear(f)))
 	vm.LoadGlobals(state)
 
 	return gameRunner{
-		fb:    frameBuffer,
 		state: state,
 	}
 }

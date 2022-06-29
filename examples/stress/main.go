@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"turtle/pkg/turtle"
 )
 
@@ -56,8 +55,6 @@ func (Cart) Update() {
 func (Cart) Render() {
 	turtle.Clear()
 	renderRects()
-
-	turtle.Print(fmt.Sprintf("%d", len(rects)))
 }
 
 func tick() {

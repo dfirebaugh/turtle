@@ -18,7 +18,7 @@ type Config struct {
 	ScaleFactor             int    `yaml:"scale-factor"`
 	DebugEnabled            bool   `yaml:"debug"`
 	DebugCollidablesEnabled bool   `yaml:"debug-collidables"`
-	UseOpenGL               bool   `yaml:"use-opengl"`
+	Engine                  uint   `yaml:"engine"`
 }
 
 //go:embed config.yml

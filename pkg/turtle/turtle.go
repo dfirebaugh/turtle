@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"time"
 	"turtle/config"
+	"turtle/internal/cart"
 	"turtle/internal/graphics"
 	"turtle/internal/pallette"
 	"turtle/pkg/gamemath"
@@ -13,7 +14,6 @@ import (
 )
 
 var (
-	// Rect         = e.Rect
 	RandomColor  = pallette.Pallette{}.RandomColor
 	Pallette     = pallette.Pallette{}.GetColorIndex
 	gp           *graphics.GraphicsPipeline
@@ -58,10 +58,7 @@ func initializeTick() {
 	}()
 }
 
-func Run(cart graphics.Cart) {
-	logrus.SetLevel(logrus.ErrorLevel)
-	initializeTick()
-
+func initGP() {
 	c := config.Get()
 
 	gp = &graphics.GraphicsPipeline{
@@ -72,6 +69,20 @@ func Run(cart graphics.Cart) {
 		// BackgroundColor: e.GetColor(1),
 		BackgroundColor: color.Black,
 	}
+}
 
+func RunCart(cartPath string) {
+	if gp == nil {
+		initGP()
+	}
+	Run(cart.NewCart(cartPath, gp))
+}
+
+func Run(cart graphics.Cart) {
+	logrus.SetLevel(logrus.ErrorLevel)
+	initializeTick()
+	if gp == nil {
+		initGP()
+	}
 	gp.Run(cart)
 }

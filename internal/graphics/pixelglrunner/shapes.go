@@ -9,6 +9,9 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 )
 
+type shape interface {
+	Draw()
+}
 type ShapeRenderer struct {
 	shapes *[]shapes.Shape
 	imd    *imdraw.IMDraw

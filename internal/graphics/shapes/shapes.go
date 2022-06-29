@@ -6,6 +6,7 @@ import (
 )
 
 type Shape interface {
+	Draw()
 }
 
 type Circle struct {
@@ -22,3 +23,7 @@ type Line struct {
 	gamemath.Line
 	Color pallette.Color
 }
+
+func (Circle) Draw() {}
+func (Rect) Draw()   {}
+func (Line) Draw()   {}

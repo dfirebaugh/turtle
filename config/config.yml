@@ -5,4 +5,4 @@ window:
 scale-factor: 2
 debug: true
 debug-collidables: false
-use-opengl: true
+engine: 1

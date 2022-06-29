@@ -14,10 +14,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-type Shape interface {
-	Draw(dst *ebiten.Image)
-}
-
 type Circle struct {
 	Color pallette.Color
 	gamemath.Circle
@@ -43,14 +39,14 @@ var (
 
 	// emptySubImage is an internal sub image of emptyImage.
 	// Use emptySubImage at DrawTriangles instead of emptyImage in order to avoid bleeding edges.
-	emptySubImage = emptyImage.SubImage(image.Rect(1, 1, config.Get().Window.Width, config.Get().Window.Height)).(*ebiten.Image)
+	emptySubImage = emptyImage.SubImage(image.Rect(0, 0, config.Get().Window.Width, config.Get().Window.Height)).(*ebiten.Image)
 )
 
-func (r Rect) Draw(dst *ebiten.Image) {
-	ebitenutil.DrawRect(dst, r.Rect[0], r.Rect[1], r.Rect[2], r.Rect[3], pallette.Pallette{}.Get(r.Color))
+func (r Rect) Draw() {
+	ebitenutil.DrawRect(emptySubImage, r.Rect[0], r.Rect[1], r.Rect[2], r.Rect[3], pallette.Pallette{}.Get(r.Color))
 }
 
-func (l Line) DrawWithRects(dst *ebiten.Image) {
+func (l Line) DrawWithRects() {
 	o := l.Line.Origin
 	d := l.Line.Destination
 
@@ -66,11 +62,11 @@ func (l Line) DrawWithRects(dst *ebiten.Image) {
 		Rect{
 			Rect:  gamemath.MakeRect(x+(float64(i)*dx), y+(float64(i)*dy), 1, 1),
 			Color: l.Color,
-		}.Draw(dst)
+		}.Draw()
 	}
 }
 
-func (l Line) DrawWithPixels(dst *ebiten.Image) {
+func (l Line) DrawWithPixels() {
 	o := l.Line.Origin
 	d := l.Line.Destination
 
@@ -84,7 +80,7 @@ func (l Line) DrawWithPixels(dst *ebiten.Image) {
 	dy := int(math.Sin(heading))
 
 	for i := 0; float64(i) < gamemath.GetDistance(l.Line.Origin, l.Line.Destination); i++ {
-		dst.Set(
+		emptySubImage.Set(
 			x+(i*dx),
 			y+(i*dy),
 			pallette.Colors[l.Color],
@@ -92,7 +88,7 @@ func (l Line) DrawWithPixels(dst *ebiten.Image) {
 	}
 }
 
-func (l Line) DrawAsVec(dst *ebiten.Image) {
+func (l Line) DrawAsVec() {
 	var path vector.Path
 
 	path.MoveTo(1, 12)
@@ -114,23 +110,23 @@ func (l Line) DrawAsVec(dst *ebiten.Image) {
 		vs[i].ColorG = float32(g)
 		vs[i].ColorB = float32(b)
 	}
-	dst.DrawTriangles(vs, is, emptySubImage, op)
+	emptySubImage.DrawTriangles(vs, is, emptySubImage, op)
 }
 
-func (l Line) Draw(dst *ebiten.Image) {
-	l.DrawWithRects(dst)
+func (l Line) Draw() {
+	l.DrawWithRects()
 }
 
-func (c Circle) DrawOutlineWithPixels(dst *ebiten.Image) {
+func (c Circle) DrawOutlineWithPixels() {
 	for i := 0; i < 360; i++ {
 		x1 := c.R * math.Cos(float64(i)*math.Pi/180)
 		y1 := c.R * math.Sin(float64(i)*math.Pi/180)
 
-		dst.Set(int(c.X+x1+c.R), int(c.Y+y1+c.R), pallette.Colors[c.Color])
+		emptySubImage.Set(int(c.X+x1+c.R), int(c.Y+y1+c.R), pallette.Colors[c.Color])
 	}
 }
 
-func (c Circle) DrawOutlineWithRects(dst *ebiten.Image) {
+func (c Circle) DrawOutlineWithRects() {
 	for i := 0; i < 360; i++ {
 		x1 := c.R * math.Cos(float64(i)*math.Pi/180)
 		y1 := c.R * math.Sin(float64(i)*math.Pi/180)
@@ -138,55 +134,59 @@ func (c Circle) DrawOutlineWithRects(dst *ebiten.Image) {
 		Rect{
 			Rect:  gamemath.MakeRect(c.X+x1+c.R, c.Y+y1+c.R, 1, 1),
 			Color: c.Color,
-		}.Draw(dst)
+		}.Draw()
 	}
 }
 
-func (c Circle) DrawOutline(dst *ebiten.Image) {
-	c.DrawOutlineWithPixels(dst)
+func (c Circle) DrawOutline() {
+	c.DrawOutlineWithPixels()
 }
 
 // SlowFill draws a circle O(radius)
 // bigger circles won't fill entirely
-func (c Circle) SlowFill(dst *ebiten.Image) {
+func (c Circle) SlowFill() {
 	for radius := c.R; radius >= 0; radius-- {
 		Circle{
 			Circle: gamemath.MakeCircle(c.X, c.Y, radius),
 			Color:  c.Color,
-		}.DrawOutline(dst)
+		}.DrawOutline()
 	}
 }
 
 // fill with mostly one rect
-func (c Circle) RectFill(dst *ebiten.Image) {
+func (c Circle) RectFill() {
 	offsetX := c.R
 	offsetY := c.R
 
 	Rect{
 		Rect:  gamemath.MakeRect(c.X-offsetX, c.Y-offsetY, c.R+c.R, c.R+c.R),
 		Color: c.Color,
-	}.Draw(dst)
+	}.Draw()
 }
 
-func (c Circle) Fill(dst *ebiten.Image) {
-	c.RectFill(dst)
+func (c Circle) Fill() {
+	c.RectFill()
 }
 
-func (c Circle) Draw(dst *ebiten.Image) {
+func (c Circle) Draw() {
 	// c.Fill(dst)
-	c.DrawOutline(dst)
+	c.DrawOutline()
 }
 
-func (sr ShapeRenderer) DrawShapes(dst *ebiten.Image) {
+func (sr ShapeRenderer) DrawShapes() {
 	if sr.Shapes == nil {
 		return
 	}
 	for _, s := range *sr.Shapes {
-		s, ok := s.(Shape)
-		if !ok {
-			continue
+		if s, ok := s.(shapes.Circle); ok {
+			Circle(s).Draw()
 		}
-		s.Draw(dst)
+		if s, ok := s.(shapes.Rect); ok {
+			Rect(s).Draw()
+		}
+		if s, ok := s.(shapes.Line); ok {
+			Line(s).Draw()
+		}
 	}
 }
 
@@ -195,18 +195,22 @@ func (sr ShapeRenderer) clear() {
 	*sr.Debug = ""
 }
 
-func (sr ShapeRenderer) debugPrint(dst *ebiten.Image) {
+func (sr ShapeRenderer) debugPrint() {
+	if config.Get().DebugEnabled {
+		ebitenutil.DebugPrintAt(emptySubImage, fmt.Sprintf("#%d", len(*sr.Shapes)), 0, config.Get().Window.Height-15)
+	}
 	if *sr.Debug == "" {
 		return
 	}
-	ebitenutil.DebugPrintAt(dst, *sr.Debug, 0, 20)
+	ebitenutil.DebugPrintAt(emptySubImage, *sr.Debug, 0, 20)
 }
 
 func (sr ShapeRenderer) Draw(dst *ebiten.Image) {
-	sr.DrawShapes(dst)
-	sr.debugPrint(dst)
-	if config.Get().DebugEnabled {
-		ebitenutil.DebugPrintAt(dst, fmt.Sprintf("#%d", len(*sr.Shapes)), 0, config.Get().Window.Height-15)
-	}
+	sr.DrawShapes()
+	sr.debugPrint()
+	dst.DrawImage(emptySubImage, &ebiten.DrawImageOptions{})
+
 	sr.clear()
+
+	emptySubImage.Clear()
 }
