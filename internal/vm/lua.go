@@ -61,6 +61,7 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"COS":         lvm.Cos,
 		"SIN":         lvm.Sin,
 		"HEADING":     lvm.GetHeading,
+		"DISTANCE":    lvm.GetDistance,
 		"NOW":         lvm.GetTick,
 		"PALLETTE":    lvm.renderPallette,
 		"ATAN":        lvm.Atan,
@@ -184,6 +185,16 @@ func (LuaVM) GetHeading(state *lua.LState) int {
 	v0 := gamemath.MakeVector(x0, y0)
 	v1 := gamemath.MakeVector(x1, y1)
 	state.Push(lua.LNumber(v0.GetHeading(v1)))
+	return 1
+}
+func (LuaVM) GetDistance(state *lua.LState) int {
+	x0 := float64(state.ToNumber(1))
+	y0 := float64(state.ToNumber(2))
+	x1 := float64(state.ToNumber(3))
+	y1 := float64(state.ToNumber(4))
+	v0 := gamemath.MakeVector(x0, y0)
+	v1 := gamemath.MakeVector(x1, y1)
+	state.Push(lua.LNumber(v0.GetDistance(v1)))
 	return 1
 }
 

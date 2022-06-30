@@ -6,7 +6,7 @@ import (
 	"turtle/internal/cart"
 	"turtle/internal/chips/font"
 	"turtle/internal/chips/ppu"
-	"turtle/internal/vector"
+	"turtle/internal/chips/vector"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )

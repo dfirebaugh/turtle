@@ -1,13 +1,14 @@
 
 local World={}
+local Grid={}
 local size=6
 local speed=0.8
-local CollisionBody={}
 
 local function isAxisAlignedCollision(cb0, cb1)
     return cb0.x < cb1.x+cb1.w and cb0.x+ cb0.w > cb1.x and  cb0.y < cb1.y+cb1.h and cb0.h+cb0.y > cb1.y
 end
 
+local CollisionBody={}
 function CollisionBody:Create(e)
     this = {}
     this.x=e.x
@@ -26,6 +27,10 @@ function CollisionBody:Create(e)
     return this
 end
 
+local function toTileCoord(x,y)
+    local tileSize=8
+    return math.floor(tileSize*math.floor(x)+math.floor(y))
+end
 
 local Entity={}
 function Entity:new(x, y)
@@ -37,6 +42,7 @@ function Entity:new(x, y)
     this.color=RND(14)
     this.dir=HEADING(RND(SCREENW()), RND(SCREENH()))
     this.id=UID()
+    this.location=toTileCoord(x,y)
 
     function this:render()
         -- RECT(this.x, this.y, this.size*2+1, this.size*2+1, 1);
@@ -69,20 +75,47 @@ function Entity:new(x, y)
 
         this.x = this.x+(COS(this.dir) * this.speed)
         this.y = this.y+(SIN(this.dir) * this.speed)
+
+        Grid[toTileCoord(this.x,this.y)]=this.id
+        Grid[this.location]=0
+        this.location=toTileCoord(this.x,this.y)
+    end
+
+    function this:checkNeighbors()
+        local neighbors = {}
+
+        table.insert(neighbors, Grid[toTileCoord(this.x+1,this.y)])
+        table.insert(neighbors, Grid[toTileCoord(this.x-1,this.y)])
+        table.insert(neighbors, Grid[toTileCoord(this.x,this.y+1)])
+        table.insert(neighbors, Grid[toTileCoord(this.x,this.y-1)])
+        table.insert(neighbors, Grid[toTileCoord(this.x+1,this.y+1)])
+        table.insert(neighbors, Grid[toTileCoord(this.x-1,this.y-1)])
+        table.insert(neighbors, Grid[toTileCoord(this.x+1,this.y-1)])
+        table.insert(neighbors, Grid[toTileCoord(this.x-1,this.y+1)])
+
+        for _, n in pairs(neighbors) do
+            local e = World[n]
+            if n~=0 then
+                if isAxisAlignedCollision(CollisionBody:Create(this), CollisionBody:Create(World[n])) then 
+                    this.dir = HEADING(this.x, this.y, e.x, e.y)
+                end
+            end
+        --     if n ~= 0 and n ~= nil then
+        --     -- if n ~= 0 and n ~= nil and this.x == this.x and this.y == this.y and e.x == e.x and e.y == e.y then
+        --         print(n)
+        --         if isAxisAlignedCollision(CollisionBody:Create(this), CollisionBody:Create(World[n])) then 
+        --             this.dir = HEADING(this.x, this.y, e.x, e.y)
+        --         end
+        --     end
+        end
     end
     function this:update()
         if not CollisionBody:Create(this):isWithinScreen() then
             this.moveToward(64, 64)
         end
-        this.move()
 
-        for _, e in pairs(World) do
-            if this.id ~= e.id then
-                if isAxisAlignedCollision(CollisionBody:Create(this), CollisionBody:Create(e)) then
-                    this.dir = HEADING(this.x, this.y, e.x, e.y)
-                end
-            end
-        end
+        this.checkNeighbors()
+        this.move()
     end
 
     return this

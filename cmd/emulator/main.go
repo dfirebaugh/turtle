@@ -13,13 +13,13 @@ import (
 var cartPath string
 
 func init() {
-	flag.StringVar(&cartPath, "cart", "main.lua", "relative path to cart file")
+	flag.StringVar(&cartPath, "cart", "./examples/raycast/raycast.lua", "relative path to cart file")
 }
 
 func main() {
 	flag.Parse()
 
-	runner := emulator.New(cartPath)
+	runner := emulator.New("./raycast.lua")
 	systems := []ebitenrunner.System{runner}
 	drawables := []ebitenrunner.Drawable{runner}
 

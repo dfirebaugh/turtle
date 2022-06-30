@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Turtle Engine</title>
+<style type="text/css" media="screen">
+    #editor { 
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 50vw;
+        width:50vw;
+    }
+    #emulator-screen {
+        width: 50vw;
+    }
+    body {
+        background-color: black;
+    }
+    </style>
+</head>
+<script src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<body>
+
+    <div id="editor"></div>
+    <button onClick="toggleEditor();" id="toggleButton" style="color: white; background-color: grey;">hide</button>
+    <button onClick="run();" id="runButton" style="color: white; background-color: grey;">Run</button>
+
+    <script src="wasm_exec.js"></script>
+    <div id="emulator-screen">
+    </div>
+	<script>
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/twilight");
+        editor.session.setMode("ace/mode/lua");
+
+        function toggleEditor() {
+            const x = document.getElementById("editor")
+            const btn = document.getElementById("toggleButton")
+            if (x.style.display === "none") {
+                x.style.display = "block";
+                btn.textContent = "hide"
+            } else {
+                x.style.display = "none";
+                btn.textContent = "show"
+            }
+        }
+        if (!WebAssembly.instantiateStreaming) { // polyfill
+            WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                const source = await (await resp).arrayBuffer();
+                return await WebAssembly.instantiate(source, importObject);
+            };
+        }
+        
+        const go = new Go();
+        let mod, inst;
+        WebAssembly.instantiateStreaming(fetch("./cheezewiz.wasm"), go.importObject).then((result) => {
+            mod = result.module;
+            inst = result.instance;
+            document.getElementById("runButton").disabled = false;
+        }).catch((err) => {
+            console.error(err);
+        });
+
+
+        async function run() {
+            console.clear();
+            const editor = ace.edit("editor")
+            console.log("editor.getValue()")
+            console.log(editor.getValue())
+            // console.log(document.getElementById("editor"))
+            go.loadCart("some text")
+
+            await go.run(await WebAssembly.instantiate(mod, go.importObject));
+        }
+    </script>
+</body>
+</html>
