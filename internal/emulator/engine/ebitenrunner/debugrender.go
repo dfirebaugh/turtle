@@ -11,9 +11,10 @@ import (
 type DebugRenderer struct{}
 
 func (d DebugRenderer) Draw(screen *ebiten.Image) {
+	if config.Get().FPSEnabled {
+		ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()))
+	}
 	if !config.Get().DebugEnabled {
 		return
 	}
-
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()))
 }

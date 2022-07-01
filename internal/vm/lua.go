@@ -71,6 +71,7 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"PI":          lvm.Pi,
 		"UID":         lvm.UID,
 		"PRINTAT":     lvm.PrintAt,
+		"FPS":         lvm.renderFPS,
 	}
 	for key, fn := range globals {
 		L.SetGlobal(key, L.NewFunction(fn))
@@ -214,6 +215,11 @@ func (l LuaVM) renderPallette(state *lua.LState) int {
 		h := w
 		l.gp.Rect(gamemath.MakeRect(x, y, w, h), pallette.Color(i))
 	}
+	return 0
+}
+
+func (l LuaVM) renderFPS(state *lua.LState) int {
+	config.Get().FPSEnabled = true
 	return 0
 }
 
