@@ -208,11 +208,11 @@ func (l LuaVM) GetTick(state *lua.LState) int {
 }
 
 func (l LuaVM) renderPallette(state *lua.LState) int {
-	w := float64(config.Get().Window.Width / len(pallette.Colors))
 	for i := range pallette.Colors {
-		x := float64(i)*w + w
-		y := float64(config.Get().Window.Height) - w
-		h := w
+		x := float64(i*config.Get().Window.Width/len(pallette.Colors)) + 1
+		y := float64(config.Get().Window.Height - config.Get().Window.Width/len(pallette.Colors))
+		w := float64(config.Get().Window.Width/len(pallette.Colors)) + 1
+		h := float64(config.Get().Window.Width / len(pallette.Colors))
 		l.gp.Rect(gamemath.MakeRect(x, y, w, h), pallette.Color(i))
 	}
 	return 0
