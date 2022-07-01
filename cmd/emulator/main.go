@@ -17,7 +17,10 @@ func main() {
 
 	runner := emulator.New()
 	e := ebitenwrapper.New()
-	runner.Cart.LoadCartFromFile(cartPath)
+	err := runner.Cart.LoadCartFromFile(cartPath)
+	if err != nil {
+		panic(err)
+	}
 	e.Scene.Reset(runner)
 
 	e.Run()

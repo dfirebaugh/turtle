@@ -1,37 +1,61 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<title>Turtle Engine</title>
-<style type="text/css" media="screen">
-    #editor { 
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 50vw;
-        width:50vw;
-    }
-    #emulator-screen {
-        width: 50vw;
-    }
-    body {
-        background-color: black;
-    }
+    <title>Turtle Engine</title>
+    <style type="text/css" media="screen">
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 50vw;
+            width: 50vw;
+        }
+        #button-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: black;
+            height: 2rem;
+        }
+
+        #emulator-screen {
+            width: 50vw;
+        }
+
+        body {
+            background-color: black;
+            color: white;
+            width: 50vw;
+        }
     </style>
 </head>
-<script src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
-<body>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+<body>
+    <div id="button-bar">
+        <button onClick="reset();" id="resetButton" style="color: white; background-color: grey;">reset</button>
+        <button onClick="save();" id="saveButton" style="color: white; background-color: grey;">save</button>
+        <!-- <button onClick="toggleEditor();" id="toggleButton" style="color: white; background-color: grey;">hide</button> -->
+        <button onClick="load();" id="runButton" style="color: white; background-color: grey;">Run</button> 
+        <span>(ctrl+enter)</span>
+    </div>
     <div id="editor"></div>
-    <button onClick="toggleEditor();" id="toggleButton" style="color: white; background-color: grey;">hide</button>
-    <button onClick="run();" id="runButton" style="color: white; background-color: grey;">Run</button>
+    <paper-toast id="toast" text="Hello world!"></paper-toast>
+    
+    <div id="emulator-screen"></div>
 
     <script src="wasm_exec.js"></script>
-    <div id="emulator-screen">
-    </div>
-	<script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script>
         var editor = ace.edit("editor");
-        editor.setTheme("ace/theme/twilight");
+        editor.setTheme("ace/theme/dracula");
         editor.session.setMode("ace/mode/lua");
 
         function toggleEditor() {
@@ -45,33 +69,85 @@
                 btn.textContent = "show"
             }
         }
-        if (!WebAssembly.instantiateStreaming) { // polyfill
-            WebAssembly.instantiateStreaming = async (resp, importObject) => {
-                const source = await (await resp).arrayBuffer();
-                return await WebAssembly.instantiate(source, importObject);
-            };
+
+        async function load() {
+            console.clear()
+            loadCart(editor.getValue())
         }
-        
-        const go = new Go();
-        let mod, inst;
-        WebAssembly.instantiateStreaming(fetch("./cheezewiz.wasm"), go.importObject).then((result) => {
-            mod = result.module;
-            inst = result.instance;
-            document.getElementById("runButton").disabled = false;
-        }).catch((err) => {
-            console.error(err);
-        });
+        (async function loadAndRunGoWasm() {
+                const go = new Go();
+                const response = await fetch("./emulator.wasm");
+                const buffer = await response.arrayBuffer();
+                const result = await WebAssembly.instantiate(buffer, go.importObject);
+                go.run(result.instance)
+                editor.setValue(localStorage.getItem("turtleScript"))
+        })()
 
+        function reset() {
+            editor.setValue(`local x=0
+function INIT()
+end
+function UPDATE()
+    x=(x+1)%SCREENW()
+end
+function RENDER()
+    CLR()
+    RECT(x, 64, 10, 10, 14)
+    PALLETTE()
+end
+`)
+            load()
+        }
 
-        async function run() {
-            console.clear();
-            const editor = ace.edit("editor")
-            console.log("editor.getValue()")
-            console.log(editor.getValue())
-            // console.log(document.getElementById("editor"))
-            go.loadCart("some text")
+        function download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
 
-            await go.run(await WebAssembly.instantiate(mod, go.importObject));
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+
+        function save() {
+            download("turtleScript.lua",editor.getValue());
+        }
+
+        document.addEventListener('keydown', function(e) {
+            var evtobj = window.event? event : e
+            const enterKeyCode = 13
+            const rKeyCode = 82
+            const sKeyCode = 83
+            if (evtobj.keyCode == enterKeyCode && evtobj.ctrlKey || evtobj.keyCode == rKeyCode && evtobj.ctrlKey || evtobj.keyCode == sKeyCode && evtobj.ctrlKey) e.preventDefault();
+            if (evtobj.keyCode == enterKeyCode && evtobj.ctrlKey) load();
+            if (evtobj.keyCode == rKeyCode && evtobj.ctrlKey) load();
+            if (evtobj.keyCode == sKeyCode && evtobj.ctrlKey) save();
+
+            localStorage.setItem('turtleScript', editor.getValue())
+        })
+
+        function showError(errorMsg) {
+            toastr.options = {
+                "closeButton": false,
+                "debug": false,
+                "newestOnTop": false,
+                "progressBar": false,
+                "positionClass": "toast-bottom-left",
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            }
+            toastr["error"](errorMsg)
         }
     </script>
 </body>

@@ -12,6 +12,10 @@ import (
 var cartCode string
 var game *ebitenwrapper.Game
 
+func showErrorMessage(msg string) {
+	js.Global().Call("showError", msg)
+}
+
 func loadCart(value js.Value, args []js.Value) interface{} {
 	codeText := args[0].String()
 	if codeText == "" {
@@ -19,7 +23,14 @@ func loadCart(value js.Value, args []js.Value) interface{} {
 		return nil
 	}
 	runner := emulator.New()
-	runner.Cart.LoadCart(codeText)
+	err := runner.Cart.LoadCart(codeText)
+
+	if err != nil {
+		println(err)
+		showErrorMessage(err.Error())
+		return nil
+	}
+
 	game.Reset(runner)
 	return nil
 }

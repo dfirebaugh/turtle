@@ -19,28 +19,31 @@ func NewCart(gp vm.GraphicsPipeline, fp vm.FontPipeline) *Cart {
 	}
 }
 
-func (gr *Cart) LoadCart(cartCode string) {
+func (gr *Cart) LoadCart(cartCode string) error {
 	state := lua.NewState()
 
 	if err := state.DoString(cartCode); err != nil {
-		panic(err)
+		return err
 	}
 	gr.lvm.LoadCart(state)
 	gr.state = state
 
 	gr.Init()
+	return nil
 }
 
-func (gr *Cart) LoadCartFromFile(cartPath string) {
+func (gr *Cart) LoadCartFromFile(cartPath string) error {
 	state := lua.NewState()
 
 	if err := state.DoFile(cartPath); err != nil {
-		panic(err)
+		return err
 	}
 	gr.lvm.LoadCart(state)
 	gr.state = state
 
 	gr.Init()
+
+	return nil
 }
 
 func (gr Cart) Init() {
