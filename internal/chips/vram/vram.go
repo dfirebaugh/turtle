@@ -2,7 +2,7 @@ package vram
 
 import (
 	"turtle/config"
-	"turtle/internal/pallette"
+	"turtle/internal/chips/ppu/pallette"
 )
 
 type graphicBuffer [config.ScreenWidth][config.ScreenHeight][3]uint8
@@ -39,10 +39,10 @@ func (v *VRAM) GetFrame() []byte {
 	return frame
 }
 
-func (v *VRAM) Fill(c pallette.Color) {
+func (v *VRAM) Fill(c uint8) {
 	for row := 0; row < config.Get().Window.Height; row++ {
 		for col := 0; col < config.Get().Window.Width; col++ {
-			r, g, b, _ := pallette.Colors[c].RGBA()
+			r, g, b, _ := pallette.GetColor(c).RGBA()
 			v.buffers[tmpBuffer][col][row][0] = uint8(r) // red
 			v.buffers[tmpBuffer][col][row][1] = uint8(g) // green
 			v.buffers[tmpBuffer][col][row][2] = uint8(b) // blue

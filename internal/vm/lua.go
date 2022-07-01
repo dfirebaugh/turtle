@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 	"turtle/config"
-	"turtle/internal/pallette"
+	"turtle/internal/gamepad"
 	"turtle/pkg/gamemath"
 
 	"github.com/google/uuid"
@@ -25,10 +25,11 @@ type FontPipeline interface {
 }
 
 type LuaVM struct {
-	gp      GraphicsPipeline
-	fp      FontPipeline
-	globals map[string]lua.LGFunction
-	tick    *uint
+	gp          GraphicsPipeline
+	fp          FontPipeline
+	controllers []gamepad.GamePad
+	globals     map[string]lua.LGFunction
+	tick        *uint
 }
 
 // world clock
@@ -36,8 +37,12 @@ var tick uint = 1
 
 func NewLuaVM(gp GraphicsPipeline, fp FontPipeline) LuaVM {
 	lvm := LuaVM{
-		gp:   gp,
-		fp:   fp,
+		gp: gp,
+		fp: fp,
+		controllers: []gamepad.GamePad{{
+			Buttons: make(map[gamepad.Button]bool),
+			Device:  gamepad.Keyboard{},
+		}},
 		tick: &tick,
 	}
 	lvm.initializeTick()
@@ -63,6 +68,8 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"CLR":         lvm.Clear,
 		"COS":         lvm.Cos,
 		"SIN":         lvm.Sin,
+		"SQRT":        lvm.SquareRoot,
+		"EXP":         lvm.Exp,
 		"HEADING":     lvm.GetHeading,
 		"DISTANCE":    lvm.GetDistance,
 		"NOW":         lvm.GetTick,
@@ -72,6 +79,7 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"UID":         lvm.UID,
 		"PRINTAT":     lvm.PrintAt,
 		"FPS":         lvm.renderFPS,
+		"BTN":         lvm.Button,
 	}
 	for key, fn := range globals {
 		L.SetGlobal(key, L.NewFunction(fn))
@@ -128,7 +136,6 @@ func (l LuaVM) MakePoint(L *lua.LState) int {
 	l.gp.Point(x, y, c)
 	return 0
 }
-
 func (l LuaVM) MakeCircle(L *lua.LState) int {
 	if l.gp == nil {
 		return 0
@@ -158,7 +165,18 @@ func (LuaVM) Cos(state *lua.LState) int {
 	state.Push(lua.LNumber(math.Cos(n)))
 	return 1
 }
+func (LuaVM) Exp(state *lua.LState) int {
+	n := float64(state.ToNumber(1))
 
+	state.Push(lua.LNumber(math.Exp(n)))
+	return 1
+}
+func (LuaVM) SquareRoot(state *lua.LState) int {
+	n := float64(state.ToNumber(1))
+
+	state.Push(lua.LNumber(math.Sqrt(n)))
+	return 1
+}
 func (LuaVM) Sin(state *lua.LState) int {
 	n := float64(state.ToNumber(1))
 
@@ -202,17 +220,23 @@ func (LuaVM) GetDistance(state *lua.LState) int {
 	return 1
 }
 
+func (l LuaVM) Button(state *lua.LState) int {
+	button := gamepad.Button(state.ToNumber(1))
+	state.Push(lua.LBool(l.controllers[0].Buttons[gamepad.Button(button)]))
+	return 1
+}
+
 func (l LuaVM) GetTick(state *lua.LState) int {
 	state.Push(lua.LNumber(*l.tick))
 	return 1
 }
 
 func (l LuaVM) renderPallette(state *lua.LState) int {
-	for i := range pallette.Colors {
-		x := float64(i*config.Get().Window.Width/len(pallette.Colors)) + 1
-		y := float64(config.Get().Window.Height - config.Get().Window.Width/len(pallette.Colors))
-		w := float64(config.Get().Window.Width/len(pallette.Colors)) + 1
-		h := float64(config.Get().Window.Width / len(pallette.Colors))
+	for i := range config.Pallette {
+		x := float64(i*config.Get().Window.Width/len(config.Pallette)) + 1
+		y := float64(config.Get().Window.Height - config.Get().Window.Width/len(config.Pallette))
+		w := float64(config.Get().Window.Width/len(config.Pallette)) + 1
+		h := float64(config.Get().Window.Width / len(config.Pallette))
 		l.gp.Rect(gamemath.MakeRect(x, y, w, h), uint8(i))
 	}
 	return 0
@@ -232,13 +256,17 @@ func (LuaVM) Init(state *lua.LState) {
 		panic(err)
 	}
 }
-func (LuaVM) UpdateCalls(state *lua.LState) {
+func (l LuaVM) UpdateCalls(state *lua.LState) {
 	if err := state.CallByParam(lua.P{
 		Fn:      state.GetGlobal("UPDATE"), // name of Lua function
 		NRet:    0,                         // number of returned values
 		Protect: true,                      // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
 		panic(err)
+	}
+
+	for _, g := range l.controllers {
+		g.Update()
 	}
 }
 func (LuaVM) DrawCalls(state *lua.LState) {
