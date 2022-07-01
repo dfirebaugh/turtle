@@ -12,18 +12,35 @@ type Cart struct {
 	lvm   vm.LuaVM
 }
 
-func NewCart(cartpath string, gp vm.GraphicsPipeline, fp vm.FontPipeline) Cart {
+func NewCart(gp vm.GraphicsPipeline, fp vm.FontPipeline) *Cart {
+	return &Cart{
+		gp:  gp,
+		lvm: vm.NewLuaVM(gp, fp),
+	}
+}
+
+func (gr *Cart) LoadCart(cartCode string) {
 	state := lua.NewState()
-	if err := state.DoFile(cartpath); err != nil {
+
+	if err := state.DoString(cartCode); err != nil {
 		panic(err)
 	}
-	lvm := vm.NewLuaVM(gp, fp, state)
+	gr.lvm.LoadCart(state)
+	gr.state = state
 
-	return Cart{
-		state: state,
-		gp:    gp,
-		lvm:   lvm,
+	gr.Init()
+}
+
+func (gr *Cart) LoadCartFromFile(cartPath string) {
+	state := lua.NewState()
+
+	if err := state.DoFile(cartPath); err != nil {
+		panic(err)
 	}
+	gr.lvm.LoadCart(state)
+	gr.state = state
+
+	gr.Init()
 }
 
 func (gr Cart) Init() {

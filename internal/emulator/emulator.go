@@ -14,16 +14,15 @@ import (
 type Emulator struct {
 	ppu                *ppu.PPU
 	fontProcessingUnit *font.FontProcessingUnit
-	Cart               cart.Cart
+	Cart               *cart.Cart
 }
 
-func New(cartpath string) Emulator {
+func New() Emulator {
 	e := Emulator{
 		ppu:                ppu.New(),
 		fontProcessingUnit: &font.FontProcessingUnit{},
 	}
-	e.Cart = cart.NewCart(cartpath, vector.New(e.ppu), e.fontProcessingUnit)
-
+	e.Cart = cart.NewCart(vector.New(e.ppu), e.fontProcessingUnit)
 	e.Cart.Init()
 
 	return e

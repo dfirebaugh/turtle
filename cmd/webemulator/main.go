@@ -1,49 +1,35 @@
-// build: GOOS=js GOARCH=wasm go build -o main.wasm main.go
+//go:build (js && ignore) || wasm
+// +build js,ignore wasm
 
 package main
 
 import (
 	"syscall/js"
-	"turtle/config"
 	"turtle/internal/emulator"
-	"turtle/internal/emulator/engine/ebitenrunner"
 	"turtle/internal/emulator/engine/ebitenrunner/ebitenwrapper"
-
-	"golang.org/x/image/colornames"
 )
 
 var cartCode string
+var game *ebitenwrapper.Game
 
-func loadCart(s string) {
-	println(s)
-	// document := js.Global().Get("document")
-	// p := document.Call("createElement", "p")
-	// p.Set("innerHTML", message)
-	// document.Get("body").Call("appendChild", p)
+func loadCart(value js.Value, args []js.Value) interface{} {
+	codeText := args[0].String()
+	if codeText == "" {
+		println("no code submitted...")
+		return nil
+	}
+	runner := emulator.New()
+	runner.Cart.LoadCart(codeText)
+	game.Reset(runner)
+	return nil
 }
 
 func setJSFuncs() {
-	c := make(chan bool)
 	js.Global().Set("loadCart", js.FuncOf(loadCart))
-	<-c
 }
 
 func main() {
-	runner := emulator.New(cartCode)
-
-	systems := []ebitenrunner.System{runner}
-	drawables := []ebitenrunner.Drawable{runner}
-
-	c := config.Get()
-
-	e := &ebitenwrapper.Game{
-		Scene:           ebitenrunner.New(systems, drawables),
-		WindowTitle:     c.Title,
-		WindowScale:     c.ScaleFactor,
-		Width:           c.Window.Width,
-		Height:          c.Window.Height,
-		BackgroundColor: colornames.Skyblue,
-	}
-
-	e.Run()
+	setJSFuncs()
+	game = ebitenwrapper.New()
+	game.Run()
 }

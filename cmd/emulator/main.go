@@ -2,12 +2,8 @@ package main
 
 import (
 	"flag"
-	"turtle/config"
 	"turtle/internal/emulator"
-	"turtle/internal/emulator/engine/ebitenrunner"
 	"turtle/internal/emulator/engine/ebitenrunner/ebitenwrapper"
-
-	"golang.org/x/image/colornames"
 )
 
 var cartPath string
@@ -19,20 +15,10 @@ func init() {
 func main() {
 	flag.Parse()
 
-	runner := emulator.New("./raycast.lua")
-	systems := []ebitenrunner.System{runner}
-	drawables := []ebitenrunner.Drawable{runner}
-
-	c := config.Get()
-
-	e := &ebitenwrapper.Game{
-		Scene:           ebitenrunner.New(systems, drawables),
-		WindowTitle:     c.Title,
-		WindowScale:     c.ScaleFactor,
-		Width:           c.Window.Width,
-		Height:          c.Window.Height,
-		BackgroundColor: colornames.Skyblue,
-	}
+	runner := emulator.New()
+	e := ebitenwrapper.New()
+	runner.Cart.LoadCartFromFile(cartPath)
+	e.Scene.Reset(runner)
 
 	e.Run()
 }

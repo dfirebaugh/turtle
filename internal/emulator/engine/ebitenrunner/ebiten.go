@@ -19,10 +19,21 @@ type scene struct {
 	drawables []Drawable
 }
 
-func New(systems []System, drawables []Drawable) *scene {
+func New() *scene {
 	return &scene{
-		systems:   systems,
-		drawables: drawables,
+		systems:   []System{},
+		drawables: []Drawable{},
+	}
+}
+
+func (s *scene) Reset(cart interface{}) {
+	s.systems = []System{}
+	s.drawables = []Drawable{}
+	if sys, ok := cart.(System); ok {
+		s.systems = append(s.systems, sys)
+	}
+	if d, ok := cart.(Drawable); ok {
+		s.drawables = append(s.drawables, d)
 	}
 }
 

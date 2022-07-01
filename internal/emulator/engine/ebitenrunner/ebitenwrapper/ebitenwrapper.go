@@ -6,11 +6,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"turtle/config"
+	"turtle/internal/emulator/engine/ebitenrunner"
 
 	ebiten "github.com/hajimehoshi/ebiten/v2"
+	"golang.org/x/image/colornames"
 )
 
 type scene interface {
+	Reset(interface{})
 	Update()
 	Draw(screen *ebiten.Image)
 	Exit()
@@ -26,6 +30,18 @@ type Game struct {
 	BackgroundColor color.Color
 }
 
+func New() *Game {
+	c := config.Get()
+
+	return &Game{
+		Scene:           ebitenrunner.New(),
+		WindowTitle:     c.Title,
+		WindowScale:     c.ScaleFactor,
+		Width:           c.Window.Width,
+		Height:          c.Window.Height,
+		BackgroundColor: colornames.Skyblue,
+	}
+}
 func (g *Game) Update() error {
 	g.Scene.Update()
 	return nil
@@ -40,6 +56,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.Width, g.Height
 }
 
+func (g *Game) Reset(s interface{}) {
+	g.Scene.Reset(s)
+}
 func (g *Game) Run() {
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc,

@@ -34,16 +34,19 @@ type LuaVM struct {
 // world clock
 var tick uint = 1
 
-func NewLuaVM(gp GraphicsPipeline, fp FontPipeline, L *lua.LState) LuaVM {
+func NewLuaVM(gp GraphicsPipeline, fp FontPipeline) LuaVM {
 	lvm := LuaVM{
 		gp:   gp,
 		fp:   fp,
 		tick: &tick,
 	}
-	lvm.setGlobals(L)
 	lvm.initializeTick()
 
 	return lvm
+}
+
+func (lvm LuaVM) LoadCart(state *lua.LState) {
+	lvm.setGlobals(state)
 }
 
 func (lvm LuaVM) setGlobals(L *lua.LState) {
