@@ -61,11 +61,11 @@ func (v *VRAM) Swap() {
 	v.buffers[activeBuffer] = v.buffers[tmpBuffer]
 }
 
-func (v *VRAM) Put(x, y uint8, color pallette.Color) {
+func (v *VRAM) Put(x, y uint8, color uint8) {
 	if x <= 0 || x >= config.ScreenWidth || y <= 0 || y >= config.ScreenHeight {
 		return
 	}
-	r, g, b, _ := pallette.Colors[color].RGBA()
+	r, g, b, _ := pallette.GetColor(color).RGBA()
 	v.buffers[tmpBuffer][x][y][0] = uint8(r)
 	v.buffers[tmpBuffer][x][y][1] = uint8(g)
 	v.buffers[tmpBuffer][x][y][2] = uint8(b)

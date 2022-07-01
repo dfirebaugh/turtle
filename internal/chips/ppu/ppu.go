@@ -2,7 +2,6 @@ package ppu
 
 import (
 	"turtle/internal/chips/vram"
-	"turtle/internal/pallette"
 )
 
 const (
@@ -12,7 +11,7 @@ const (
 
 type PPU struct {
 	vram         *vram.VRAM
-	Transparent  pallette.Color
+	Transparent  uint8
 	Layers       map[Layer]GraphicsLayer
 	currentLayer Layer
 }
@@ -34,7 +33,7 @@ func (p *PPU) GetFrame() []byte {
 	return p.Layers[p.currentLayer].GetFrame()
 }
 
-func (p *PPU) Put(x, y uint8, c pallette.Color) {
+func (p *PPU) Put(x, y uint8, c uint8) {
 	p.vram.Put(x, y, c)
 }
 

@@ -13,10 +13,10 @@ import (
 )
 
 type GraphicsPipeline interface {
-	Rect(rect gamemath.Rect, color pallette.Color)
-	Line(v0 gamemath.Vector, v1 gamemath.Vector, stroke float64, color pallette.Color)
-	Circ(circle gamemath.Circle, color pallette.Color)
-	Point(x uint8, y uint8, color pallette.Color)
+	Rect(rect gamemath.Rect, color uint8)
+	Line(v0 gamemath.Vector, v1 gamemath.Vector, stroke float64, color uint8)
+	Circ(circle gamemath.Circle, color uint8)
+	Point(x uint8, y uint8, color uint8)
 	Clear()
 }
 
@@ -105,8 +105,8 @@ func (l LuaVM) MakeRect(L *lua.LState) int {
 	y := float64(L.ToNumber(2))
 	w := float64(L.ToNumber(3))
 	h := float64(L.ToNumber(4))
-	color := int(L.ToNumber(5))
-	l.gp.Rect(gamemath.MakeRect(x, y, w, h), pallette.Color(color))
+	color := uint8(L.ToNumber(5))
+	l.gp.Rect(gamemath.MakeRect(x, y, w, h), color)
 	return 0
 }
 
@@ -116,14 +116,14 @@ func (l LuaVM) MakeLine(L *lua.LState) int {
 	x1 := float64(L.ToNumber(3))
 	y1 := float64(L.ToNumber(4))
 
-	c := pallette.Color(L.ToNumber(5))
+	c := uint8(L.ToNumber(5))
 	l.gp.Line(gamemath.MakeVector(x0, y0), gamemath.MakeVector(x1, y1), 1, c)
 	return 0
 }
 func (l LuaVM) MakePoint(L *lua.LState) int {
 	x := uint8(L.ToNumber(1))
 	y := uint8(L.ToNumber(2))
-	c := pallette.Color(L.ToNumber(3))
+	c := uint8(L.ToNumber(3))
 
 	l.gp.Point(x, y, c)
 	return 0
@@ -136,8 +136,8 @@ func (l LuaVM) MakeCircle(L *lua.LState) int {
 	x := float64(L.ToNumber(1))
 	y := float64(L.ToNumber(2))
 	r := float64(L.ToNumber(3))
-	color := int(L.ToNumber(4))
-	l.gp.Circ(gamemath.MakeCircle(x, y, r), pallette.Color(color))
+	color := uint8(L.ToNumber(4))
+	l.gp.Circ(gamemath.MakeCircle(x, y, r), color)
 	return 0
 }
 
@@ -213,7 +213,7 @@ func (l LuaVM) renderPallette(state *lua.LState) int {
 		y := float64(config.Get().Window.Height - config.Get().Window.Width/len(pallette.Colors))
 		w := float64(config.Get().Window.Width/len(pallette.Colors)) + 1
 		h := float64(config.Get().Window.Width / len(pallette.Colors))
-		l.gp.Rect(gamemath.MakeRect(x, y, w, h), pallette.Color(i))
+		l.gp.Rect(gamemath.MakeRect(x, y, w, h), uint8(i))
 	}
 	return 0
 }

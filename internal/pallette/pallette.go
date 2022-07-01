@@ -5,11 +5,7 @@ import (
 	"math/rand"
 )
 
-type Color int
-
-const ()
-
-type Pallette struct{}
+type Color uint8
 
 var Colors = []color.Color{
 	color.RGBA{127, 36, 84, 255},
@@ -29,19 +25,10 @@ var Colors = []color.Color{
 	color.RGBA{252, 204, 171, 255},
 }
 
-func (Pallette) RandomColor() int {
+func RandomColor() int {
 	return rand.Intn(len(Colors))
 }
 
-func (p Pallette) GetColorIndex(i int) int {
-	if i > len(Colors) {
-		return 0
-	}
-	return i
-}
-func (Pallette) GetColor(i int) color.Color {
-	return Colors[i]
-}
-func (Pallette) Get(i Color) color.Color {
-	return Colors[i]
+func GetColor(i uint8) color.Color {
+	return Colors[i%uint8(len(Colors))]
 }
