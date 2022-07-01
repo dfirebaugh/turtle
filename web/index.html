@@ -39,8 +39,8 @@
 <body>
     <div id="button-bar">
         <button onClick="reset();" id="resetButton" style="color: white; background-color: grey;">reset</button>
+        <button onClick="toggleEditor();" id="toggleButton" style="color: white; background-color: grey;">hide</button>
         <button onClick="save();" id="saveButton" style="color: white; background-color: grey;">save</button>
-        <!-- <button onClick="toggleEditor();" id="toggleButton" style="color: white; background-color: grey;">hide</button> -->
         <button onClick="load();" id="runButton" style="color: white; background-color: grey;">Run</button> 
         <span>(ctrl+enter)</span>
     </div>
@@ -86,17 +86,40 @@
 
         function reset() {
             editor.setValue(`local x=0
+local y=0
+local color=0
+
 function INIT()
+    x=SCREENW()/2
+    y=SCREENH()/2
     FPS()
 end
 function UPDATE()
-    x=(x+1)%SCREENW()
+    if BTN(0) then -- up
+        y=y-1
+    end
+    if BTN(1) then -- down
+        y=y+1
+    end
+    if BTN(2) then -- left
+        x=x-1
+    end
+    if BTN(3) then -- right
+        x=x+1
+    end
+    if BTN(4) then -- Z
+        color=color+1
+    end
+    if BTN(5) then -- X
+        color=color-1
+    end
 end
 function RENDER()
     CLR()
-    RECT(x, 64, 10, 10, 14)
+    RECT(x, y, 10, 10, color)
     PALLETTE()
 end
+
 `)
             load()
         }
