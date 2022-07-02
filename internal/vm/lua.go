@@ -1,21 +1,21 @@
 package vm
 
 import (
-	"math"
 	"math/rand"
 	"time"
 	"turtle/config"
+	"turtle/internal/chips/math"
 	"turtle/internal/gamepad"
-	"turtle/pkg/gamemath"
 
 	"github.com/google/uuid"
 	lua "github.com/yuin/gopher-lua"
 )
 
 type GraphicsPipeline interface {
-	Rect(rect gamemath.Rect, color uint8)
-	Line(v0 gamemath.Vector, v1 gamemath.Vector, stroke float64, color uint8)
-	Circ(circle gamemath.Circle, color uint8)
+	Rect(rect math.Rect, color uint8)
+	Line(v0 math.Vector, v1 math.Vector, color uint8)
+	Triangle(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8)
+	Circ(circle math.Circle, color uint8)
 	Point(x uint8, y uint8, color uint8)
 	Clear()
 }
@@ -63,6 +63,7 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"RECT":        lvm.MakeRect,
 		"CIR":         lvm.MakeCircle,
 		"LINE":        lvm.MakeLine,
+		"TRI":         lvm.MakeTriangle,
 		"POINT":       lvm.MakePoint,
 		"CLS":         lvm.Clear,
 		"CLR":         lvm.Clear,
@@ -114,10 +115,22 @@ func (l LuaVM) MakeRect(L *lua.LState) int {
 	w := float64(L.ToNumber(3))
 	h := float64(L.ToNumber(4))
 	color := uint8(L.ToNumber(5))
-	l.gp.Rect(gamemath.MakeRect(x, y, w, h), color)
+	l.gp.Rect(math.MakeRect(x, y, w, h), color)
 	return 0
 }
 
+func (l LuaVM) MakeTriangle(L *lua.LState) int {
+	x0 := float64(L.ToNumber(1))
+	y0 := float64(L.ToNumber(2))
+	x1 := float64(L.ToNumber(3))
+	y1 := float64(L.ToNumber(4))
+	x2 := float64(L.ToNumber(5))
+	y2 := float64(L.ToNumber(6))
+	color := uint8(L.ToNumber(7))
+
+	l.gp.Triangle(math.MakeVector(x0, y0), math.MakeVector(x1, y1), math.MakeVector(x2, y2), color)
+	return 0
+}
 func (l LuaVM) MakeLine(L *lua.LState) int {
 	x0 := float64(L.ToNumber(1))
 	y0 := float64(L.ToNumber(2))
@@ -125,7 +138,7 @@ func (l LuaVM) MakeLine(L *lua.LState) int {
 	y1 := float64(L.ToNumber(4))
 
 	c := uint8(L.ToNumber(5))
-	l.gp.Line(gamemath.MakeVector(x0, y0), gamemath.MakeVector(x1, y1), 1, c)
+	l.gp.Line(math.MakeVector(x0, y0), math.MakeVector(x1, y1), c)
 	return 0
 }
 func (l LuaVM) MakePoint(L *lua.LState) int {
@@ -144,12 +157,11 @@ func (l LuaVM) MakeCircle(L *lua.LState) int {
 	y := float64(L.ToNumber(2))
 	r := float64(L.ToNumber(3))
 	color := uint8(L.ToNumber(4))
-	l.gp.Circ(gamemath.MakeCircle(x, y, r), color)
+	l.gp.Circ(math.MakeCircle(x, y, r), color)
 	return 0
 }
 
 func (LuaVM) random(state *lua.LState) int {
-	// rand.Seed(time.Now().UnixNano())
 	state.Push(lua.LNumber(rand.Intn(state.ToInt(1))))
 	return 1
 }
@@ -204,8 +216,8 @@ func (LuaVM) GetHeading(state *lua.LState) int {
 	y0 := float64(state.ToNumber(2))
 	x1 := float64(state.ToNumber(3))
 	y1 := float64(state.ToNumber(4))
-	v0 := gamemath.MakeVector(x0, y0)
-	v1 := gamemath.MakeVector(x1, y1)
+	v0 := math.MakeVector(x0, y0)
+	v1 := math.MakeVector(x1, y1)
 	state.Push(lua.LNumber(v0.GetHeading(v1)))
 	return 1
 }
@@ -214,8 +226,8 @@ func (LuaVM) GetDistance(state *lua.LState) int {
 	y0 := float64(state.ToNumber(2))
 	x1 := float64(state.ToNumber(3))
 	y1 := float64(state.ToNumber(4))
-	v0 := gamemath.MakeVector(x0, y0)
-	v1 := gamemath.MakeVector(x1, y1)
+	v0 := math.MakeVector(x0, y0)
+	v1 := math.MakeVector(x1, y1)
 	state.Push(lua.LNumber(v0.GetDistance(v1)))
 	return 1
 }
@@ -237,7 +249,7 @@ func (l LuaVM) renderPallette(state *lua.LState) int {
 		y := float64(config.Get().Window.Height - config.Get().Window.Width/len(config.Pallette))
 		w := float64(config.Get().Window.Width/len(config.Pallette)) + 1
 		h := float64(config.Get().Window.Width / len(config.Pallette))
-		l.gp.Rect(gamemath.MakeRect(x, y, w, h), uint8(i))
+		l.gp.Rect(math.MakeRect(x, y, w, h), uint8(i))
 	}
 	return 0
 }
