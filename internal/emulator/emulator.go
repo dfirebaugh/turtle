@@ -6,7 +6,6 @@ import (
 	"turtle/internal/cart"
 	"turtle/internal/chips/font"
 	"turtle/internal/chips/ppu"
-	"turtle/internal/chips/vector"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -22,7 +21,7 @@ func New() Emulator {
 		ppu:                ppu.New(),
 		fontProcessingUnit: &font.FontProcessingUnit{},
 	}
-	e.Cart = cart.NewCart(vector.New(e.ppu), e.fontProcessingUnit)
+	e.Cart = cart.NewCart(e.ppu, e.fontProcessingUnit)
 	e.Cart.Init()
 
 	return e

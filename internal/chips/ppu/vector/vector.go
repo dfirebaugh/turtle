@@ -92,6 +92,8 @@ func (v Vector) Circ(c math.Circle, color uint8) {
 	v.CircleOutline(c, color)
 }
 
+func 
+
 // DumbFill draws a rect inside the circle
 // it doesn't fit though :3
 func (v Vector) CircleDumbFill(c math.Circle, color uint8) {

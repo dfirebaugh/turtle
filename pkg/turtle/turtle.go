@@ -2,12 +2,9 @@ package turtle
 
 import (
 	"turtle/config"
-	"turtle/internal/pallette"
 )
 
 var (
-	RandomColor  = pallette.Pallette{}.RandomColor
-	Pallette     = pallette.Pallette{}.GetColorIndex
 	ScreenHeight = config.Get().Window.Height
 	ScreenWidth  = config.Get().Window.Width
 	Tick         = 0

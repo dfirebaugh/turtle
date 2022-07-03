@@ -17,6 +17,7 @@ type GraphicsPipeline interface {
 	Triangle(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8)
 	Circ(circle math.Circle, color uint8)
 	Point(x uint8, y uint8, color uint8)
+	ShiftLayer(i uint8)
 	Clear()
 }
 
@@ -81,6 +82,7 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"PRINTAT":     lvm.PrintAt,
 		"FPS":         lvm.renderFPS,
 		"BTN":         lvm.Button,
+		"BG":          lvm.ShiftLayer,
 	}
 	for key, fn := range globals {
 		L.SetGlobal(key, L.NewFunction(fn))
@@ -236,6 +238,10 @@ func (l LuaVM) Button(state *lua.LState) int {
 	button := gamepad.Button(state.ToNumber(1))
 	state.Push(lua.LBool(l.controllers[0].Buttons[gamepad.Button(button)]))
 	return 1
+}
+func (l LuaVM) ShiftLayer(state *lua.LState) int {
+	l.gp.ShiftLayer(uint8(state.ToNumber(1)))
+	return 0
 }
 
 func (l LuaVM) GetTick(state *lua.LState) int {
