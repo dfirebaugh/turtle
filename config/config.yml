@@ -1,8 +1,6 @@
-title: turtleengine
+title: turtle
 window:
   height: 128
   width: 128
-scale-factor: 2
+scale-factor: 4
 debug: true
-debug-collidables: false
-engine: 1

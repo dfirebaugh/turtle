@@ -14,13 +14,11 @@ type Config struct {
 		Height int `yaml:"height"`
 		Width  int `yaml:"width"`
 	} `yaml:"window"`
-	Server                  string `yaml:"server"`
-	Port                    int    `yaml:"port"`
-	ScaleFactor             int    `yaml:"scale-factor"`
-	DebugEnabled            bool   `yaml:"debug"`
-	DebugCollidablesEnabled bool   `yaml:"debug-collidables"`
-	Engine                  uint   `yaml:"engine"`
-	FPSEnabled              bool   `yaml:"fps-enabled"`
+	Server       string `yaml:"server"`
+	Port         int    `yaml:"port"`
+	ScaleFactor  int    `yaml:"scale-factor"`
+	DebugEnabled bool   `yaml:"debug"`
+	FPSEnabled   bool   `yaml:"fps-enabled"`
 }
 
 const (

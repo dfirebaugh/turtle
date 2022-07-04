@@ -2,7 +2,7 @@ package cart
 
 import (
 	"turtle/config"
-	"turtle/internal/vm"
+	"turtle/internal/cart/vm"
 
 	lua "github.com/yuin/gopher-lua"
 )

@@ -1,18 +1,21 @@
-PROJECTNAME=turtleengine
+PROJECTNAME=turtle
 
-all: client windows-client-cross-compile wasm examples web
+all: native windows-client-cross-compile wasm examples web
 
 run:
-	go run ./cmd/client
+	go run ./cmd/emulator
+
+run-gl:
+	go run -tags gl ./cmd/emulator
 
 test:
 	go test ./...
 
 native:
-	go build -o .dist/$(PROJECTNAME) ./cmd/client
+	go build -o .dist/$(PROJECTNAME) ./cmd/emulator
 
 wasm:
-	GOOS=js GOARCH=wasm go build -o .dist/$(PROJECTNAME).wasm ./cmd/webemulator/
+	GOOS=js GOARCH=wasm go build -o .dist/$(PROJECTNAME).wasm ./cmd/webemulator
 
 .PHONY: web
 web:

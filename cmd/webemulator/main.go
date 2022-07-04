@@ -6,11 +6,10 @@ package main
 import (
 	"syscall/js"
 	"turtle/internal/emulator"
-	"turtle/internal/emulator/engine/ebitenrunner/ebitenwrapper"
 )
 
 var cartCode string
-var game *ebitenwrapper.Game
+var game = emulator.New()
 
 func showErrorMessage(msg string) {
 	js.Global().Call("showError", msg)
@@ -22,16 +21,13 @@ func loadCart(value js.Value, args []js.Value) interface{} {
 		println("no code submitted...")
 		return nil
 	}
-	runner := emulator.New()
-	err := runner.Cart.LoadCart(codeText)
+	err := game.LoadCart(codeText)
 
 	if err != nil {
 		println(err)
 		showErrorMessage(err.Error())
 		return nil
 	}
-
-	game.Reset(runner)
 	return nil
 }
 
@@ -41,6 +37,13 @@ func setJSFuncs() {
 
 func main() {
 	setJSFuncs()
-	game = ebitenwrapper.New()
+	game.LoadCart(`function INIT()
+	end
+	function UPDATE()
+	end
+	function RENDER() 
+		RECT(0, 0, 128, 128, 0)
+	end
+	`)
 	game.Run()
 }

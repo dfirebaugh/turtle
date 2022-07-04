@@ -1,3 +1,6 @@
+//go:build !gl
+// +build !gl
+
 package gamepad
 
 import (

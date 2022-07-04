@@ -3,25 +3,19 @@ package main
 import (
 	"flag"
 	"turtle/internal/emulator"
-	"turtle/internal/emulator/engine/ebitenrunner/ebitenwrapper"
 )
 
 var cartPath string
 
 func init() {
-	flag.StringVar(&cartPath, "cart", "./examples/raycast/raycast.lua", "relative path to cart file")
+	flag.StringVar(&cartPath, "cart", "./examples/raycast.lua", "relative path to cart file")
 }
 
 func main() {
 	flag.Parse()
+	println(cartPath)
 
-	runner := emulator.New()
-	e := ebitenwrapper.New()
-	err := runner.Cart.LoadCartFromFile(cartPath)
-	if err != nil {
-		panic(err)
-	}
-	e.Scene.Reset(runner)
-
-	e.Run()
+	em := emulator.New()
+	em.LoadCartFromFile(cartPath)
+	em.Run()
 }
