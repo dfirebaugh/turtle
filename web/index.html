@@ -40,7 +40,8 @@
 
 <body>
     <div id="button-bar">
-        <button onClick="reset();" id="resetButton" style="color: white; background-color: grey;">reset</button>
+        <button onClick="loadDefaultCart();" id="resetButton"
+            style="color: white; background-color: grey;">default</button>
         <button onClick="toggleEditor();" id="toggleButton" style="color: white; background-color: grey;">hide</button>
         <button onClick="save();" id="saveButton" style="color: white; background-color: grey;">save</button>
         <button onClick="load();" id="runButton" style="color: white; background-color: grey;">Run</button>
@@ -58,32 +59,9 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js" type="text/javascript"
         charset="utf-8"></script>
+
     <script>
-        // Polyfill
-        if (!WebAssembly.instantiateStreaming) {
-            WebAssembly.instantiateStreaming = async (resp, importObject) => {
-                const source = await (await resp).arrayBuffer();
-                return await WebAssembly.instantiate(source, importObject);
-            };
-        }
-
-        (async function loadAndRunGoWasm() {
-            const go = new Go();
-            const response = await fetch("./turtle.wasm");
-            const buffer = await response.arrayBuffer();
-            const result = await WebAssembly.instantiate(buffer, go.importObject);
-            go.run(result.instance)
-
-            fetchCart()
-        })()
-        
-        async function load() {
-            console.clear()
-            loadCart(editor.getValue())
-        }
-
-        function reset() {
-            editor.setValue(`local x=0
+        const defaultCart = `local x=0
 local y=0
 local color=0
 
@@ -114,46 +92,14 @@ function UPDATE()
 end
 function RENDER()
     CLR()
+    RECT(0, 0, SCREENW(), SCREENH(), 11)
     RECT(x, y, 10, 10, color)
     PALLETTE()
 end
+`;
 
-`)
-            load()
-        }
 
-        function fetchCart() {
-            const isValidUrl = (url) => {
-                try {
-                    new URL(url);
-                } catch (e) {
-                    console.error(e);
-                    return false;
-                }
-                return true;
-            };
-
-            const params = new Proxy(new URLSearchParams(window.location.search), {
-                get: (searchParams, prop) => searchParams.get(prop),
-            });
-            let value = params.cart; // "some_value"
-
-            if (!value) {
-                editor.setValue(localStorage.getItem("turtleCart"))
-                console.log("loading cart from memory...")
-                return
-            }
-
-            if (!isValidUrl(value)) {
-                console.warn("not a valid url")
-                return;
-            }
-            fetch(value).then(result => {
-                console.log("loading cart from url...")
-                result.text().then(text => editor.setValue(text))
-            })
-        }
-        var editor = ace.edit("editor");
+        let editor = ace.edit("editor");
         editor.setTheme("ace/theme/dracula");
         editor.session.setMode("ace/mode/lua");
 
@@ -168,7 +114,6 @@ end
                 btn.textContent = "show"
             }
         }
-
         function download(filename, text) {
             var element = document.createElement('a');
             element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -181,9 +126,8 @@ end
 
             document.body.removeChild(element);
         }
-
         function save() {
-            download("bb_cart.lua", editor.getValue());
+            download("turtle_cart.lua", editor.getValue());
         }
 
         document.addEventListener('keydown', function (e) {
@@ -199,27 +143,117 @@ end
             localStorage.setItem('turtleCart', editor.getValue())
         })
 
+        toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": false,
+            "positionClass": "toast-bottom-left",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        }
         function showError(errorMsg) {
-            toastr.options = {
-                "closeButton": false,
-                "debug": false,
-                "newestOnTop": false,
-                "progressBar": false,
-                "positionClass": "toast-bottom-left",
-                "preventDuplicates": false,
-                "onclick": null,
-                "showDuration": "300",
-                "hideDuration": "1000",
-                "timeOut": "5000",
-                "extendedTimeOut": "1000",
-                "showEasing": "swing",
-                "hideEasing": "linear",
-                "showMethod": "fadeIn",
-                "hideMethod": "fadeOut"
-            }
             toastr["error"](errorMsg)
         }
+        function showInfo(msg) {
+            toastr["info"](msg)
+        }
+        function showWarning(msg) {
+            toastr["warning"](msg)
+        }
+        function showSuccess(msg) {
+            toastr["success"](msg)
+        }
 
+        // Polyfill
+        if (!WebAssembly.instantiateStreaming) {
+            WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                const source = await (await resp).arrayBuffer();
+                return await WebAssembly.instantiate(source, importObject);
+            };
+        }
+
+        (async function loadAndRunGoWasm() {
+            const go = new Go();
+            const response = await fetch("./turtle.wasm");
+            const buffer = await response.arrayBuffer();
+            const result = await WebAssembly.instantiate(buffer, go.importObject)
+            go.run(result.instance)
+            const cart = new Cart()
+            cart.fetch()
+        })()
+
+        function setEditorValue(textValue) {
+            editor.setValue(textValue)
+            load();
+        }
+        async function load() {
+            console.clear()
+            loadCart(editor.getValue())
+            // showInfo("loading cart...")
+        }
+
+        function loadDefaultCart() {
+            const cart = new Cart()
+            cart.loadDefault()
+            load()
+        }
+
+        class Cart {
+            loaded = false;
+            loadDefault() {
+                setEditorValue(defaultCart);
+                showInfo("loading default cart...")
+                this.loaded = true;
+            }
+            loadFromMemory() {
+                const cart = localStorage.getItem("turtleCart")
+                if (!cart) return;
+                setEditorValue(cart)
+                showInfo("loading cart from memory...")
+                this.loaded = true;
+            }
+            async loadFromParam() {
+                const isValidUrl = (url) => {
+                    try {
+                        new URL(url);
+                    } catch (e) {
+                        showError(e);
+                        return false;
+                    }
+                    return true;
+                };
+                const params = new Proxy(new URLSearchParams(window.location.search), {
+                    get: (searchParams, prop) => searchParams.get(prop),
+                });
+                const value = params.cart;
+                if (!value) return;
+                if (!isValidUrl(value)) {
+                    showError("not a valid cart url")
+                    this.loadDefault();
+                    return;
+                }
+
+                const result = await fetch(value)
+                if (!result.ok) return showError("not a valid cart url");
+                showInfo("loading cart from url...")
+                result.text().then(text => setEditorValue(text))
+                this.loaded = true;
+            }
+            fetch() {
+                if (!this.loaded) this.loadFromParam();
+                if (!this.loaded) this.loadFromMemory();
+                if (!this.loaded) this.loadDefault();
+            }
+        }
     </script>
 </body>
 
