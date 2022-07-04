@@ -12,6 +12,8 @@ you can load these carts by building the project and then running the following:
 ```
 
 Alternatively, you can run these directly in the web browser.
+[web demo](https://dfirebaugh.github.io/turtle/)
+(note: you will likely have to press reset after it loads)
 
 ## Chips
 Turtle has `chips`.  `Chips` are really just convenience libraries that are available to the `carts` (carts are intended to represent game cartridges.)
