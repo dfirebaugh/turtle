@@ -39,15 +39,14 @@ api avialable in lua:
 ```lua
 SCREENH()
 SCREENW()
-BTN(i) -- returns true if button is pressed
-RECT(x, y, w, h, color) -- color is an index on the pallette
-CIR(x, y, r, color)
+BUTTON(n) -- returns true if button is pressed - shorthand: BTN(n)
+RECTANGLE(x, y, w, h, color) -- color is an index on the pallette
+CIRCLE(x, y, r, color) -- shorthand: CIR(x, y, r, color)
 LINE(x, y, x0, y0, x1, y1, color)
-TRI(x0, y0, x1, y1, x2, y2, color)
-POINT(x, y, color)
-CLS() -- clear screen
-CLR() -- clear screen
-RND(n) -- random number between 0 and n
+TRIANGLE(x0, y0, x1, y1, x2, y2, color) -- shorthand: TRI(x0, y0, x1, y1, x2, y2, color)
+POINT(x, y, color) -- shorthand: PT(x, y, color)
+CLEAR() -- clear screen - shorthand: CLR() or CLS()
+RANDOM(n) -- random number between 0 and n - shorthand: RND()
 COS(n) -- cosin
 SIN(n) -- sin
 SQRT(n)

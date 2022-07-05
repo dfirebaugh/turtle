@@ -59,13 +59,19 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 	globals := map[string]lua.LGFunction{
 		"SCREENH":     lvm.getScreenHeight,
 		"SCREENW":     lvm.getScreenWidth,
+		"RANDOM":      lvm.random,
 		"RND":         lvm.random,
 		"SCALEFACTOR": lvm.scaleFactor,
+		"RECTANGLE":   lvm.MakeRect,
 		"RECT":        lvm.MakeRect,
+		"CIRCLE":      lvm.MakeCircle,
 		"CIR":         lvm.MakeCircle,
 		"LINE":        lvm.MakeLine,
+		"TRIANGLE":    lvm.MakeTriangle,
 		"TRI":         lvm.MakeTriangle,
 		"POINT":       lvm.MakePoint,
+		"PT":          lvm.MakePoint,
+		"CLEAR":       lvm.Clear,
 		"CLS":         lvm.Clear,
 		"CLR":         lvm.Clear,
 		"COS":         lvm.Cos,
@@ -81,6 +87,7 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"UID":         lvm.UID,
 		"PRINTAT":     lvm.PrintAt,
 		"FPS":         lvm.renderFPS,
+		"BUTTON":      lvm.Button,
 		"BTN":         lvm.Button,
 		"BG":          lvm.ShiftLayer,
 	}
@@ -288,7 +295,7 @@ func (LuaVM) Init(state *lua.LState) {
 		NRet:    0,                       // number of returned values
 		Protect: true,                    // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		panic(err)
+		println(err)
 	}
 }
 func (l LuaVM) UpdateCalls(state *lua.LState) {
@@ -297,7 +304,7 @@ func (l LuaVM) UpdateCalls(state *lua.LState) {
 		NRet:    0,                         // number of returned values
 		Protect: true,                      // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		panic(err)
+		println(err)
 	}
 
 	for _, g := range l.controllers {
@@ -310,6 +317,6 @@ func (LuaVM) DrawCalls(state *lua.LState) {
 		NRet:    0,                         // number of returned values
 		Protect: true,                      // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		panic(err)
+		println(err)
 	}
 }
