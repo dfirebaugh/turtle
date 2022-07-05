@@ -32,6 +32,7 @@ var configRaw []byte
 var (
 	config   *Config
 	Pallette = []color.Color{
+		color.Black,
 		color.RGBA{127, 36, 84, 255},
 		color.RGBA{28, 43, 83, 255},
 		color.RGBA{0, 135, 81, 255},

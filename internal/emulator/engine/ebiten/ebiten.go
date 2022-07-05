@@ -1,6 +1,7 @@
 package ebiten
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"turtle/config"
 
 	ebiten "github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"golang.org/x/image/colornames"
 )
 
@@ -51,6 +53,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(g.BackgroundColor)
 	g.Console.Render(img)
 	screen.DrawImage(ebiten.NewImageFromImage(img), &ebiten.DrawImageOptions{})
+	if config.Get().FPSEnabled {
+		ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()))
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

@@ -89,7 +89,11 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"FPS":         lvm.renderFPS,
 		"BUTTON":      lvm.Button,
 		"BTN":         lvm.Button,
+		"MOUSE":       lvm.CursorPosition,
+		"MOUSEL":      lvm.IsMouseLeftPressed,
+		"MOUSER":      lvm.IsMouseRightPressed,
 		"BG":          lvm.ShiftLayer,
+		"TOSPRITE":    lvm.ToSpriteMemory,
 	}
 	for key, fn := range globals {
 		L.SetGlobal(key, L.NewFunction(fn))
@@ -171,6 +175,10 @@ func (l LuaVM) MakeCircle(L *lua.LState) int {
 	return 0
 }
 
+func (LuaVM) ToSpriteMemory(state *lua.LState) int {
+	return 0
+}
+
 func (LuaVM) random(state *lua.LState) int {
 	state.Push(lua.LNumber(rand.Intn(state.ToInt(1))))
 	return 1
@@ -241,7 +249,21 @@ func (LuaVM) GetDistance(state *lua.LState) int {
 	state.Push(lua.LNumber(v0.GetDistance(v1)))
 	return 1
 }
+func (l LuaVM) CursorPosition(state *lua.LState) int {
+	x, y := gamepad.CursorPosition()
+	state.Push(lua.LNumber(x))
+	state.Push(lua.LNumber(y))
 
+	return 2
+}
+func (l LuaVM) IsMouseLeftPressed(state *lua.LState) int {
+	state.Push(lua.LBool(gamepad.IsLeftClickPressed()))
+	return 1
+}
+func (l LuaVM) IsMouseRightPressed(state *lua.LState) int {
+	state.Push(lua.LBool(gamepad.IsRightClickPressed()))
+	return 1
+}
 func (l LuaVM) Button(state *lua.LState) int {
 	button := gamepad.Button(state.ToNumber(1))
 	state.Push(lua.LBool(l.controllers[0].Buttons[gamepad.Button(button)]))
@@ -295,7 +317,7 @@ func (LuaVM) Init(state *lua.LState) {
 		NRet:    0,                       // number of returned values
 		Protect: true,                    // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		println(err)
+		println(err.Error())
 	}
 }
 func (l LuaVM) UpdateCalls(state *lua.LState) {
@@ -304,7 +326,7 @@ func (l LuaVM) UpdateCalls(state *lua.LState) {
 		NRet:    0,                         // number of returned values
 		Protect: true,                      // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		println(err)
+		println(err.Error())
 	}
 
 	for _, g := range l.controllers {
@@ -317,6 +339,6 @@ func (LuaVM) DrawCalls(state *lua.LState) {
 		NRet:    0,                         // number of returned values
 		Protect: true,                      // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		println(err)
+		println(err.Error())
 	}
 }
