@@ -102,6 +102,12 @@ func (p Plotter) CircleDumbFill(c math.Circle, color uint8) {
 	p.Rect(math.MakeRect(c.X+2, c.Y+2, c.R*2-3, c.R*2-3), color)
 }
 
+func (p Plotter) RenderSprite(sprite []uint8, x, y float64) {
+	for i, color := range sprite {
+		p.Point(uint8(i%8)+uint8(x), uint8(i/8)+uint8(y), color)
+	}
+}
+
 func (p Plotter) Clear() {
 	p.memory.Clear()
 }

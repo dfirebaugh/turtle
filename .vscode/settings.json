@@ -10,6 +10,13 @@
         "CIRC",
         "COS",
         "SIN",
-        "HEADING"
+        "HEADING",
+        "SPR",
+        "MOUSE",
+        "MOUSEL",
+        "MOUSER",
+        "TOSPRITE",
+        "SPRITEINDEX",
+        "CLR"
     ]
 }

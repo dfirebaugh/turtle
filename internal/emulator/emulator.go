@@ -44,6 +44,10 @@ func (e Emulator) LoadCartFromFile(c string) {
 	e.engine.Reset(e)
 }
 
+func (e Emulator) SetEditorCb(fn func(string)) {
+	e.Cart.SetEditorCb(fn)
+}
+
 func (e Emulator) Run() {
 	e.engine.Run()
 }

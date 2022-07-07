@@ -8,11 +8,17 @@ import (
 	"turtle/internal/emulator"
 )
 
-var cartCode string
-var game = emulator.New()
+var (
+	cartCode string
+	game     = emulator.New()
+)
 
 func showErrorMessage(msg string) {
 	js.Global().Call("showError", msg)
+}
+
+var setEditor = func(code string) {
+	js.Global().Call("setEditorValue", code)
 }
 
 func loadCart(value js.Value, args []js.Value) interface{} {
@@ -37,6 +43,7 @@ func setJSFuncs() {
 
 func main() {
 	setJSFuncs()
+	game.SetEditorCb(setEditor)
 	game.LoadCart(`function INIT()
 	end
 	function UPDATE()

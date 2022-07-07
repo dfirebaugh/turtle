@@ -19,6 +19,7 @@ type GraphicsPipeline interface {
 	Point(x uint8, y uint8, color uint8)
 	ShiftLayer(i uint8)
 	Clear()
+	RenderSprite(sprite []uint8, x, y float64)
 }
 
 type PPU struct {
@@ -84,4 +85,7 @@ func (p PPU) CircFill(circle math.Circle, color uint8) {
 }
 func (p PPU) Point(x uint8, y uint8, color uint8) {
 	p.plotter.Point(x, y, color)
+}
+func (p PPU) RenderSprite(sprite []uint8, x, y float64) {
+	p.plotter.RenderSprite(sprite, x, y)
 }

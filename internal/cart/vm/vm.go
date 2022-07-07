@@ -19,6 +19,13 @@ type GraphicsPipeline interface {
 	Point(x uint8, y uint8, color uint8)
 	ShiftLayer(i uint8)
 	Clear()
+	RenderSprite(sprite []uint8, x, y float64)
+}
+
+type spriteMemory interface {
+	StoreSprite(cartText string)
+	SetSpriteIndex(i uint8)
+	GetSprite(i uint8) []uint8
 }
 
 type FontPipeline interface {
@@ -28,6 +35,7 @@ type FontPipeline interface {
 type LuaVM struct {
 	gp          GraphicsPipeline
 	fp          FontPipeline
+	sm          spriteMemory
 	controllers []gamepad.GamePad
 	globals     map[string]lua.LGFunction
 	tick        *uint
@@ -36,7 +44,7 @@ type LuaVM struct {
 // world clock
 var tick uint = 1
 
-func NewLuaVM(gp GraphicsPipeline, fp FontPipeline) LuaVM {
+func NewLuaVM(gp GraphicsPipeline, fp FontPipeline, sm spriteMemory) LuaVM {
 	lvm := LuaVM{
 		gp: gp,
 		fp: fp,
@@ -44,6 +52,7 @@ func NewLuaVM(gp GraphicsPipeline, fp FontPipeline) LuaVM {
 			Buttons: make(map[gamepad.Button]bool),
 			Device:  gamepad.Keyboard{},
 		}},
+		sm:   sm,
 		tick: &tick,
 	}
 	lvm.initializeTick()
@@ -94,6 +103,9 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"MOUSER":      lvm.IsMouseRightPressed,
 		"BG":          lvm.ShiftLayer,
 		"TOSPRITE":    lvm.ToSpriteMemory,
+		"SPRITEINDEX": lvm.SetSpriteIndex,
+		"SPR":         lvm.LoadSprite,
+		"ANIMATE":     lvm.AnimateSprite,
 	}
 	for key, fn := range globals {
 		L.SetGlobal(key, L.NewFunction(fn))
@@ -175,7 +187,46 @@ func (l LuaVM) MakeCircle(L *lua.LState) int {
 	return 0
 }
 
-func (LuaVM) ToSpriteMemory(state *lua.LState) int {
+func (vm LuaVM) LoadSprite(state *lua.LState) int {
+	i := uint8(state.ToNumber(1))
+	x := uint8(state.ToNumber(2))
+	y := uint8(state.ToNumber(3))
+
+	vm.gp.RenderSprite(vm.sm.GetSprite(i), float64(x), float64(y))
+	table := &lua.LTable{}
+	for _, n := range vm.sm.GetSprite(i) {
+		table.Append(lua.LNumber(n))
+	}
+	state.Push(table)
+	return 1
+}
+func (vm LuaVM) SetSpriteIndex(state *lua.LState) int {
+	i := uint8(state.ToNumber(1))
+	vm.sm.SetSpriteIndex(i)
+
+	return 0
+}
+func (vm LuaVM) ToSpriteMemory(state *lua.LState) int {
+	s := state.Get(1).String()
+	vm.sm.StoreSprite(string(s))
+
+	return 0
+}
+
+func (vm LuaVM) AnimateSprite(state *lua.LState) int {
+	i := uint8(state.ToNumber(1))
+	x := uint8(state.ToNumber(2))
+	y := uint8(state.ToNumber(3))
+	rate := uint(state.ToNumber(4))
+	now := *vm.tick
+	// println(now / rate)
+
+	vm.gp.RenderSprite(vm.sm.GetSprite(uint8((now/rate)%4)), float64(x), float64(y))
+	table := &lua.LTable{}
+	for _, n := range vm.sm.GetSprite(i) {
+		table.Append(lua.LNumber(n))
+	}
+
 	return 0
 }
 
@@ -275,7 +326,7 @@ func (l LuaVM) ShiftLayer(state *lua.LState) int {
 }
 
 func (l LuaVM) GetTick(state *lua.LState) int {
-	state.Push(lua.LNumber(*l.tick))
+	state.Push(lua.LNumber((*l.tick) / 1000))
 	return 1
 }
 
@@ -295,7 +346,7 @@ func (l LuaVM) renderFPS(state *lua.LState) int {
 	return 0
 }
 func (l LuaVM) initializeTick() {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond)
 	quit := make(chan struct{})
 	go func() {
 		for {

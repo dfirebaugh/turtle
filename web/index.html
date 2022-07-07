@@ -63,8 +63,9 @@
     <script>
         const defaultCart = `local x=0
 local y=0
-local color=0
+local color=1
 
+print("cart running...")
 function INIT()
     x=SCREENW()/2
     y=SCREENH()/2
@@ -92,10 +93,25 @@ function UPDATE()
 end
 function RENDER()
     CLR()
-    RECT(0, 0, SCREENW(), SCREENH(), 11)
+    RECT(0, 0, SCREENW(), SCREENH(), 12)
+    SPR(0, 64, 80)
+    SPR(1, 73, 80)
+    SPR(2, 82, 80)
+    SPR(3, 91, 80)
+    ANIMATE(0, 30, 30, 650)
     RECT(x, y, 10, 10, color)
+    
     PALLETTE()
 end
+
+--startSprites
+--cddccddcddddddddddddd7ddddddddddddddddddcddddddcccddddcccccddccc
+--c88cc88c88888888888887888888888888888888c888888ccc8888ccccc88ccc
+--c22cc22c22222222222227222222222222222222c222222ccc2222ccccc22ccc
+--ceecceeceeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeceeeeeeccceeeeccccceeccc
+--ceecceeceeeeeeeeeeeee7eeeeeeeeee8888e888ceeeeeeccceeeeccccceeccc
+--endSprites
+
 `;
 
 
