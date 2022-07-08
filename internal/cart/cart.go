@@ -2,6 +2,7 @@ package cart
 
 import (
 	_ "embed"
+	"os"
 	"turtle/config"
 	"turtle/internal/cart/vm"
 
@@ -18,11 +19,16 @@ type Cart struct {
 	lvm             vm.LuaVM
 	spritelyRunning bool
 	cartCode        string
+	cartPath        string
 	setEditorCb     func(string)
 }
 
 //go:embed spritely.lua
 var spritely string
+
+// some lua code that is loaded into global scope
+//go:embed object_linkage.lua
+var objectLinkage string
 
 func NewCart(gp vm.GraphicsPipeline, fp vm.FontPipeline) *Cart {
 	return &Cart{
@@ -40,6 +46,9 @@ func (gr *Cart) LoadCart(cartCode string) error {
 	sm.Sprites = make(map[uint8]string)
 	sm.StoreSprites(sm.ParseSprites(gr.cartCode))
 
+	if err := state.DoString(objectLinkage); err != nil {
+		return err
+	}
 	if err := state.DoString(sm.LoadSpritesFromCart(cartCode)); err != nil {
 		return err
 	}
@@ -52,8 +61,13 @@ func (gr *Cart) LoadCart(cartCode string) error {
 }
 
 func (gr *Cart) LoadCartFromFile(cartPath string) error {
-	// TODO: need to os.Open then run gr.LoadCart
+	gr.cartPath = cartPath
+	cart, err := os.ReadFile(cartPath)
+	if err != nil {
+		return err
+	}
 
+	gr.LoadCart(string(cart))
 	return nil
 }
 
@@ -64,7 +78,9 @@ func (gr *Cart) LoadSpritely() {
 
 	gr.sm.Sprites = make(map[uint8]string)
 	gr.sm.StoreSprites(gr.sm.ParseSprites(gr.cartCode))
-
+	if err := state.DoString(objectLinkage); err != nil {
+		println(err)
+	}
 	if err := state.DoString(spritely); err != nil {
 		println(err)
 	}
@@ -72,6 +88,30 @@ func (gr *Cart) LoadSpritely() {
 	gr.state = state
 
 	gr.Init()
+}
+
+func (gr *Cart) WriteCartFile() {
+	// write the sprite memory to the cart file
+	f, err := os.OpenFile(gr.cartPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 07644)
+	if err != nil {
+		println(err.Error(), gr.cartPath)
+		return
+	}
+	defer f.Close()
+
+	f.Truncate(0)
+	_, err = f.Seek(0, 0)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	_, err = f.Write([]byte(gr.sm.SaveSpritesToCart(gr.cartCode)))
+	if err != nil {
+		println(err.Error())
+	}
+	gr.cartCode = gr.sm.SaveSpritesToCart(gr.cartCode)
+	println(gr.cartCode)
 }
 
 func (gr *Cart) SetEditorCb(fn func(string)) {
@@ -93,6 +133,11 @@ func (gr *Cart) Update() {
 	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
 		if gr.spritelyRunning {
 			gr.spritelyRunning = false
+			if gr.setEditorCb == nil {
+				gr.WriteCartFile()
+				gr.LoadCart(gr.cartCode)
+				return
+			}
 			gr.setEditorCb(gr.sm.SaveSpritesToCart(gr.cartCode))
 			return
 		}

@@ -4,11 +4,20 @@ The intention of turtle is to make it easy to make games.
 
 ### Web Editor/Emulator
 You can create/edit carts for turtle script directly in the browser.
-[web demo](https://dfirebaugh.github.io/turtle/)
+[web emulator](https://dfirebaugh.github.io/turtle/)
 
-(note: you will likely have to press reset after it loads)
+### Sprite Editor
+Press Tab to access the sprite editor.
 
-## Turtle Scripting
+Sprites will be saved to the cart as a comment.
+
+You can also render a sprite directly with `PARSESPRITE()`.
+e.g.
+```lua
+PARSESPRITE("8888888c8777777c888888880707707c0777777cccc22ccccc7227ccccc88ccc", x, y)
+```
+
+## Turtle Carts
 There is a subset of the lua scripting language embedded in turtle.
 Some example turtle scripts (aka `carts`) exist in the `./examples` dir.
 
@@ -35,30 +44,58 @@ function RENDER()
 end
 ```
 
-api avialable in lua:
+### API avialable for carts:
 ```lua
+-- util functions
 SCREENH()
 SCREENW()
+NOW() -- seconds since the console started
 BUTTON(n) -- returns true if button is pressed - shorthand: BTN(n)
+HEADING(x0, y0, x1, y1) -- heading from one point to another
+DISTANCE(x0, y0, x1, y1) -- distance between two points
+
+
+-- render functions
 RECTANGLE(x, y, w, h, color) -- color is an index on the pallette
 CIRCLE(x, y, r, color) -- shorthand: CIR(x, y, r, color)
 LINE(x, y, x0, y0, x1, y1, color)
 TRIANGLE(x0, y0, x1, y1, x2, y2, color) -- shorthand: TRI(x0, y0, x1, y1, x2, y2, color)
 POINT(x, y, color) -- shorthand: PT(x, y, color)
 CLEAR() -- clear screen - shorthand: CLR() or CLS()
-RANDOM(n) -- random number between 0 and n - shorthand: RND()
-COS(n) -- cosin
-SIN(n) -- sin
-SQRT(n)
-ATAN(n)
-PI()
-HEADING(x0, y0, x1, y1) -- heading from one point to another
-DISTANCE(x0, y0, x1, y1) -- distance between two points
-NOW() -- seconds since the console started
+SPRITE(i) -- renders a sprite at index n of a cart's sprite memory -- shorthand: SPR(i)
 UID() -- generate a unique id
 FPS() -- render FPS info
 PALLETTE() -- render the pallette
 ```
+
+#### Object Linking
+You can copy an object's properties with the following:
+```lua
+destination=SHALLOWCOPY(source)
+```
+
+If you want to copy an objects methods, use the clone method.
+
+
+```lua
+local Base=OBJECT:clone() -- clone the base class
+Base.val="hello" -- set some value
+function Base:say_hello() -- declare some method
+    print(self.val)
+end
+
+Enemy=Base:clone() -- clone the base
+
+Other=Base:clone() -- clone the base
+Other.val="greetings" -- set a new value
+
+Enemy:say_hello() --> "hello"
+Other:say_hello() --> "greetings"
+```
+
+#### Lua 5.1 reference manual
+https://www.lua.org/manual/5.1/
+> note: the math library is handy (e.g. math.pi(); math.random(); math.cos(); math.sin();)
 
 ### Controls
 

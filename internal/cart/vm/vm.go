@@ -26,6 +26,7 @@ type spriteMemory interface {
 	StoreSprite(cartText string)
 	SetSpriteIndex(i uint8)
 	GetSprite(i uint8) []uint8
+	Parse(s string) []uint8
 }
 
 type FontPipeline interface {
@@ -66,11 +67,23 @@ func (lvm LuaVM) LoadCart(state *lua.LState) {
 
 func (lvm LuaVM) setGlobals(L *lua.LState) {
 	globals := map[string]lua.LGFunction{
-		"SCREENH":     lvm.getScreenHeight,
-		"SCREENW":     lvm.getScreenWidth,
-		"RANDOM":      lvm.random,
-		"RND":         lvm.random,
-		"SCALEFACTOR": lvm.scaleFactor,
+		"TOSPRITE":    lvm.ToSpriteMemory,
+		"SPRITEINDEX": lvm.SetSpriteIndex,
+
+		// util
+		"HEADING":  lvm.GetHeading,
+		"DISTANCE": lvm.GetDistance,
+		"NOW":      lvm.GetTick,
+		"SCREENH":  lvm.getScreenHeight,
+		"SCREENW":  lvm.getScreenWidth,
+		"BUTTON":   lvm.Button,
+		"BTN":      lvm.Button,
+		"MOUSE":    lvm.CursorPosition,
+		"MOUSEL":   lvm.IsMouseLeftPressed,
+		"MOUSER":   lvm.IsMouseRightPressed,
+		"UID":      lvm.UID,
+
+		// render functions
 		"RECTANGLE":   lvm.MakeRect,
 		"RECT":        lvm.MakeRect,
 		"CIRCLE":      lvm.MakeCircle,
@@ -80,32 +93,28 @@ func (lvm LuaVM) setGlobals(L *lua.LState) {
 		"TRI":         lvm.MakeTriangle,
 		"POINT":       lvm.MakePoint,
 		"PT":          lvm.MakePoint,
+		"BLIT":        lvm.MakePoint,
 		"CLEAR":       lvm.Clear,
 		"CLS":         lvm.Clear,
 		"CLR":         lvm.Clear,
-		"COS":         lvm.Cos,
-		"SIN":         lvm.Sin,
-		"SQRT":        lvm.SquareRoot,
-		"EXP":         lvm.Exp,
-		"HEADING":     lvm.GetHeading,
-		"DISTANCE":    lvm.GetDistance,
-		"NOW":         lvm.GetTick,
 		"PALLETTE":    lvm.renderPallette,
-		"ATAN":        lvm.Atan,
-		"PI":          lvm.Pi,
-		"UID":         lvm.UID,
 		"PRINTAT":     lvm.PrintAt,
 		"FPS":         lvm.renderFPS,
-		"BUTTON":      lvm.Button,
-		"BTN":         lvm.Button,
-		"MOUSE":       lvm.CursorPosition,
-		"MOUSEL":      lvm.IsMouseLeftPressed,
-		"MOUSER":      lvm.IsMouseRightPressed,
-		"BG":          lvm.ShiftLayer,
-		"TOSPRITE":    lvm.ToSpriteMemory,
-		"SPRITEINDEX": lvm.SetSpriteIndex,
 		"SPR":         lvm.LoadSprite,
+		"PARSESPRITE": lvm.DrawSprite,
 		"ANIMATE":     lvm.AnimateSprite,
+		"BG":          lvm.ShiftLayer,
+
+		// all of these math functions should be deprecated and
+		//  the standard math library should be used instead
+		"COS":    lvm.Cos,
+		"SIN":    lvm.Sin,
+		"SQRT":   lvm.SquareRoot,
+		"EXP":    lvm.Exp,
+		"ATAN":   lvm.Atan,
+		"PI":     lvm.Pi,
+		"RANDOM": lvm.random,
+		"RND":    lvm.random,
 	}
 	for key, fn := range globals {
 		L.SetGlobal(key, L.NewFunction(fn))
@@ -187,6 +196,15 @@ func (l LuaVM) MakeCircle(L *lua.LState) int {
 	return 0
 }
 
+// just draw straight to the screen, don't store the sprite in memory
+func (vm LuaVM) DrawSprite(state *lua.LState) int {
+	s := state.Get(1).String()
+	x := uint8(state.ToNumber(2))
+	y := uint8(state.ToNumber(3))
+
+	vm.gp.RenderSprite(vm.sm.Parse(s), float64(x), float64(y))
+	return 0
+}
 func (vm LuaVM) LoadSprite(state *lua.LState) int {
 	i := uint8(state.ToNumber(1))
 	x := uint8(state.ToNumber(2))
@@ -232,11 +250,6 @@ func (vm LuaVM) AnimateSprite(state *lua.LState) int {
 
 func (LuaVM) random(state *lua.LState) int {
 	state.Push(lua.LNumber(rand.Intn(state.ToInt(1))))
-	return 1
-}
-
-func (LuaVM) scaleFactor(state *lua.LState) int {
-	state.Push(lua.LNumber(10))
 	return 1
 }
 

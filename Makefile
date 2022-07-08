@@ -1,6 +1,6 @@
 PROJECTNAME=turtle
 
-all: native windows-client-cross-compile wasm examples web
+all: native wasm examples web
 
 run:
 	go run ./cmd/emulator

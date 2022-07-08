@@ -17,6 +17,13 @@
         "MOUSER",
         "TOSPRITE",
         "SPRITEINDEX",
-        "CLR"
+        "CLR",
+        "DISTANCE",
+        "LINE",
+        "BTN",
+        "NOW",
+        "FPS",
+        "PALLETTE",
+        "PARSESPRITE"
     ]
 }

@@ -216,22 +216,22 @@ function Entity:new(x, y)
         if not CollisionBody:Create(this):isWithinScreen() then
             this.moveToward(64, 64)
         end
-        -- if BTN(0) then -- up
-        --     this.y=this.y-1
-        -- end
-        -- if BTN(1) then -- down
-        --     this.y=this.y+1
-        -- end
-        -- if BTN(2) then -- left
-        --     this.x=this.x-1
-        -- end
-        -- if BTN(3) then -- right
-        --     this.x=this.x+1
-        -- end
+        if BTN(0) then -- up
+            this.y=this.y-1
+        end
+        if BTN(1) then -- down
+            this.y=this.y+1
+        end
+        if BTN(2) then -- left
+            this.x=this.x-1
+        end
+        if BTN(3) then -- right
+            this.x=this.x+1
+        end
         
-        -- if BTN(0) or BTN(1) or BTN(2) or BTN(3) then
-        --     return
-        -- end
+        if BTN(0) or BTN(1) or BTN(2) or BTN(3) then
+            return
+        end
 
         if not this.isValidHeading() then
             return

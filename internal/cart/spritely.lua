@@ -2,46 +2,6 @@ local color=0
 local current_sprite=0
 local mousex=0
 local mousey=0
-local function clone( base_object, clone_object )
-    if type( base_object ) ~= "table" then
-        return clone_object or base_object
-    end
-    clone_object = clone_object or {}
-    clone_object.__index = base_object
-    return setmetatable(clone_object, clone_object)
-end
-
-local function isa( clone_object, base_object )
-    local clone_object_type = type(clone_object)
-    local base_object_type = type(base_object)
-    if clone_object_type ~= "table" and base_object_type ~= table then
-        return clone_object_type == base_object_type
-    end
-    local index = clone_object.__index
-    local _isa = index == base_object
-    while not _isa and index ~= nil do
-        index = index.__index
-        _isa = index == base_object
-    end
-    return _isa
-end
-local function shallowcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in pairs(orig) do
-            copy[orig_key] = orig_value
-        end
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-
-
-OBJECT = clone( table, { clone = clone, isa = isa } )
-
 local Grid=OBJECT:clone()
 local Sprites={}
 local Canvas=Grid:clone()
@@ -54,14 +14,14 @@ local function initialize_sprites()
             Sprites[i].elements[pi]=spr[pi+1]
         end
     end
-    Canvas.element=shallowcopy(Sprites[0])
+    Canvas.element=SHALLOWCOPY(Sprites[0])
 end
 
 
 print("spritely loaded...")
 function INIT()
     initialize_sprites()
-    Canvas.elements=shallowcopy(Sprites[0].elements)
+    Canvas.elements=SHALLOWCOPY(Sprites[0].elements)
 end
 function UPDATE()
     mousex, mousey=MOUSE()
@@ -195,7 +155,7 @@ for n=0, 3 do
 
     function sprite:handle_lclick(index)
         current_sprite=self.index
-        Canvas.elements=shallowcopy(self.elements)
+        Canvas.elements=SHALLOWCOPY(self.elements)
     end
     function sprite:handle_rclick(index)
     end
@@ -216,7 +176,7 @@ function Canvas:out()
 end
 function Canvas:handle_lclick(index)
     self.elements[index]=color
-    Sprites[current_sprite].elements=shallowcopy(self.elements)
+    Sprites[current_sprite].elements=SHALLOWCOPY(self.elements)
     self:out()
 end
 function Canvas:handle_rclick(index)

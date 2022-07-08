@@ -29,6 +29,7 @@ function UPDATE()
 end
 function RENDER()
     CLR()
-    RECT(x, y, 10, 10, color)
+    RECT(0, 0, SCREENW(), SCREENH(), 13) -- background color
+    PARSESPRITE("111111dd11111111f6ff6fddffffffdddcccddddd111ddddd1d1dddd00d00ddd", x, y) -- some explicit sprite
     PALLETTE()
 end
