@@ -5,6 +5,7 @@ import (
 	"turtle/internal/cart"
 	"turtle/internal/emulator/chips/font"
 	"turtle/internal/emulator/chips/ppu"
+	"turtle/internal/emulator/chips/vram"
 	"turtle/internal/emulator/engine"
 )
 
@@ -21,9 +22,10 @@ type Emulator struct {
 }
 
 func New() Emulator {
+	v := vram.New()
 	e := Emulator{
-		pixelProcessingUnit: ppu.New(),
-		fontProcessingUnit:  &font.FontProcessingUnit{},
+		pixelProcessingUnit: ppu.New(v),
+		fontProcessingUnit:  font.New(v),
 	}
 	e.Cart = cart.NewCart(e.pixelProcessingUnit, e.fontProcessingUnit)
 	e.Cart.Init()

@@ -30,7 +30,7 @@ type spriteMemory interface {
 }
 
 type FontPipeline interface {
-	PrintAt(string, int, int)
+	PrintAt(string, int, int, uint8)
 }
 
 type LuaVM struct {
@@ -137,7 +137,7 @@ func (l LuaVM) Clear(L *lua.LState) int {
 }
 
 func (l LuaVM) PrintAt(L *lua.LState) int {
-	l.fp.PrintAt(L.ToString(1), int(L.ToNumber(2)), int(L.ToNumber(3)))
+	l.fp.PrintAt(L.ToString(1), int(L.ToNumber(2)), int(L.ToNumber(3)), uint8(L.ToNumber(4)))
 	return 0
 }
 

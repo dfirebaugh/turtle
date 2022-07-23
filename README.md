@@ -65,6 +65,7 @@ CLEAR() -- clear screen - shorthand: CLR() or CLS()
 SPRITE(i) -- renders a sprite at index n of a cart's sprite memory -- shorthand: SPR(i)
 UID() -- generate a unique id
 FPS() -- render FPS info
+PRINTAT(string, x, y, color) -- print some text to the screen
 PALLETTE() -- render the pallette
 ```
 

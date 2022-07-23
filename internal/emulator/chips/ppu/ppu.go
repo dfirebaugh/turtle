@@ -30,9 +30,9 @@ type PPU struct {
 	currentLayer Layer
 }
 
-func New() *PPU {
+func New(v *vram.VRAM) *PPU {
 	p := &PPU{
-		vram:         vram.New(),
+		vram:         v,
 		currentLayer: SpriteLayer,
 		Layers:       map[Layer]GraphicsLayer{},
 	}

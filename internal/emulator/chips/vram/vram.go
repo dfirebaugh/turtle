@@ -1,6 +1,7 @@
 package vram
 
 import (
+	"image/color"
 	"turtle/config"
 	"turtle/internal/emulator/chips/ppu/pallette"
 )
@@ -73,4 +74,24 @@ func (v *VRAM) Put(x, y uint8, color uint8) {
 
 func (v *VRAM) GetBuffer() graphicBuffer {
 	return v.buffers[activeBuffer]
+}
+
+func (v *VRAM) Size() (int16, int16) {
+	return config.ScreenWidth, config.ScreenHeight
+}
+
+func (v *VRAM) SetPixel(x, y int16, c color.RGBA) {
+	if x <= 0 || x >= config.ScreenWidth || y <= 0 || y >= config.ScreenHeight {
+		return
+	}
+	r, g, b, _ := c.RGBA()
+	v.buffers[tmpBuffer][x][y][0] = uint8(r)
+	v.buffers[tmpBuffer][x][y][1] = uint8(g)
+	v.buffers[tmpBuffer][x][y][2] = uint8(b)
+}
+
+func (v *VRAM) Display() error {
+	v.Swap()
+
+	return nil
 }
