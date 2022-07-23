@@ -5,6 +5,7 @@ import (
 	"turtle/internal/emulator/chips/ppu/pallette"
 	"turtle/internal/emulator/chips/vram"
 
+	"golang.org/x/image/colornames"
 	"tinygo.org/x/tinyfont"
 	"tinygo.org/x/tinyfont/proggy"
 )
@@ -20,5 +21,9 @@ func New(v *vram.VRAM) *FontProcessingUnit {
 }
 
 func (fp *FontProcessingUnit) PrintAt(s string, x int, y int, c uint8) {
-	tinyfont.WriteLine(fp.vram, &proggy.TinySZ8pt7b, int16(x), int16(y), s, pallette.GetColor(c).(color.RGBA))
+	color, ok := pallette.GetColor(c).(color.RGBA)
+	if !ok {
+		color = colornames.Black
+	}
+	tinyfont.WriteLine(fp.vram, &proggy.TinySZ8pt7b, int16(x), int16(y), s, color)
 }

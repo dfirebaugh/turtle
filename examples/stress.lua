@@ -45,7 +45,7 @@ function Entity:new(x, y)
     this.location=toTileCoord(x,y)
 
     function this:render()
-        -- RECT(this.x, this.y, this.size*2+1, this.size*2+1, 1);
+        CIR(this.x, this.y, this.size+1, 1);
         CIR(this.x, this.y, this.size, this.color);
     end
 
@@ -131,19 +131,18 @@ end
 
 function INIT()
     makeEntities(10)
+    FPS()
 end
 
-count=10
+count=1
 last=0
 function UPDATE()
     for _, e in pairs(World) do
         e.update()
     end
-    if NOW() % 2 == 0 and last ~= NOW() then
-        makeEntities(10)
-        count=count+10
-        -- print(count)
-        PRINTAT(count, 0, SCREENH()-10)
+    if NOW() ~= last then
+        makeEntities(1)
+        count=count+1
     end
     last=NOW()
 end
@@ -154,4 +153,5 @@ function RENDER()
         r.render()
     end
     PALLETTE()
+    PRINTAT(count, 5, SCREENH()-(SCREENH()*.1), 3)
 end

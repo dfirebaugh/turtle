@@ -21,6 +21,8 @@ type Config struct {
 	FPSEnabled   bool   `yaml:"fps-enabled"`
 }
 
+// some things need the screen size as a const
+// we can't dynamically load this from the yaml file
 const (
 	ScreenHeight = 128
 	ScreenWidth  = 128

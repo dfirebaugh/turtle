@@ -12,6 +12,7 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
 	golang.org/x/image v0.0.0-20220321031419-a8550c1d254a
 	gopkg.in/yaml.v3 v3.0.1
+	tinygo.org/x/tinydraw v0.3.0
 	tinygo.org/x/tinyfont v0.3.0
 )
 

@@ -15,8 +15,8 @@ type GraphicsPipeline interface {
 	Rect(rect math.Rect, color uint8)
 	Line(v0 math.Vector, v1 math.Vector, color uint8)
 	Triangle(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8)
-	Circ(circle math.Circle, color uint8)
-	Point(x uint8, y uint8, color uint8)
+	Circle(circle math.Circle, color uint8)
+	Point(x uint16, y uint16, color uint8)
 	ShiftLayer(i uint8)
 	Clear()
 	RenderSprite(sprite []uint8, x, y float64)
@@ -177,8 +177,8 @@ func (l LuaVM) MakeLine(L *lua.LState) int {
 	return 0
 }
 func (l LuaVM) MakePoint(L *lua.LState) int {
-	x := uint8(L.ToNumber(1))
-	y := uint8(L.ToNumber(2))
+	x := uint16(L.ToNumber(1))
+	y := uint16(L.ToNumber(2))
 	c := uint8(L.ToNumber(3))
 
 	l.gp.Point(x, y, c)
@@ -192,7 +192,7 @@ func (l LuaVM) MakeCircle(L *lua.LState) int {
 	y := float64(L.ToNumber(2))
 	r := float64(L.ToNumber(3))
 	color := uint8(L.ToNumber(4))
-	l.gp.Circ(math.MakeCircle(x, y, r), color)
+	l.gp.Circle(math.MakeCircle(x, y, r), color)
 	return 0
 }
 
@@ -339,7 +339,7 @@ func (l LuaVM) ShiftLayer(state *lua.LState) int {
 }
 
 func (l LuaVM) GetTick(state *lua.LState) int {
-	state.Push(lua.LNumber((*l.tick) / 1000))
+	state.Push(lua.LNumber((*l.tick) / 300))
 	return 1
 }
 
@@ -375,13 +375,13 @@ func (l LuaVM) initializeTick() {
 	}()
 }
 
-func (LuaVM) Init(state *lua.LState) {
+func (l LuaVM) Init(state *lua.LState) {
 	if err := state.CallByParam(lua.P{
 		Fn:      state.GetGlobal("INIT"), // name of Lua function
 		NRet:    0,                       // number of returned values
 		Protect: true,                    // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		println(err.Error())
+		panic(err.Error())
 	}
 }
 func (l LuaVM) UpdateCalls(state *lua.LState) {
@@ -390,19 +390,19 @@ func (l LuaVM) UpdateCalls(state *lua.LState) {
 		NRet:    0,                         // number of returned values
 		Protect: true,                      // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		println(err.Error())
+		panic(err.Error())
 	}
 
 	for _, g := range l.controllers {
 		g.Update()
 	}
 }
-func (LuaVM) DrawCalls(state *lua.LState) {
+func (l LuaVM) DrawCalls(state *lua.LState) {
 	if err := state.CallByParam(lua.P{
 		Fn:      state.GetGlobal("RENDER"), // name of Lua function
 		NRet:    0,                         // number of returned values
 		Protect: true,                      // return err or panic
 	}, lua.LString("Go"), lua.LString("Lua")); err != nil {
-		println(err.Error())
+		panic(err.Error())
 	}
 }

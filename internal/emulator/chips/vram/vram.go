@@ -62,7 +62,7 @@ func (v *VRAM) Swap() {
 	v.buffers[activeBuffer] = v.buffers[tmpBuffer]
 }
 
-func (v *VRAM) Put(x, y uint8, color uint8) {
+func (v *VRAM) Put(x, y uint16, color uint8) {
 	if x <= 0 || x >= config.ScreenWidth || y <= 0 || y >= config.ScreenHeight {
 		return
 	}
@@ -91,7 +91,5 @@ func (v *VRAM) SetPixel(x, y int16, c color.RGBA) {
 }
 
 func (v *VRAM) Display() error {
-	v.Swap()
-
 	return nil
 }

@@ -6,17 +6,12 @@ import (
 	"turtle/internal/emulator/chips/vram"
 )
 
-const (
-	ScreenHeight = 128
-	ScreenWidth  = 128
-)
-
 type GraphicsPipeline interface {
 	Rect(rect math.Rect, color uint8)
 	Line(v0 math.Vector, v1 math.Vector, color uint8)
 	Triangle(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8)
-	Circ(circle math.Circle, color uint8)
-	Point(x uint8, y uint8, color uint8)
+	Circle(circle math.Circle, color uint8)
+	Point(x uint16, y uint16, color uint8)
 	ShiftLayer(i uint8)
 	Clear()
 	RenderSprite(sprite []uint8, x, y float64)
@@ -48,7 +43,7 @@ func (p *PPU) GetFrame() []byte {
 	return p.Layers[p.currentLayer].GetFrame()
 }
 
-func (p *PPU) Put(x, y uint8, c uint8) {
+func (p *PPU) Put(x, y uint16, c uint8) {
 	p.vram.Put(x, y, c)
 }
 
@@ -77,13 +72,13 @@ func (p PPU) Triangle(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint
 func (p PPU) TriangleFill(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8) {
 	p.plotter.Triangle(v0, v1, v2, color)
 }
-func (p PPU) Circ(circle math.Circle, color uint8) {
-	p.plotter.Circ(circle, color)
+func (p PPU) Circle(circle math.Circle, color uint8) {
+	p.plotter.Circle(circle, color)
 }
-func (p PPU) CircFill(circle math.Circle, color uint8) {
-	p.plotter.Circ(circle, color)
+func (p PPU) CircleFill(circle math.Circle, color uint8) {
+	p.plotter.Circle(circle, color)
 }
-func (p PPU) Point(x uint8, y uint8, color uint8) {
+func (p PPU) Point(x uint16, y uint16, color uint8) {
 	p.plotter.Point(x, y, color)
 }
 func (p PPU) RenderSprite(sprite []uint8, x, y float64) {

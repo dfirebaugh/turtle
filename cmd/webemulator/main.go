@@ -42,6 +42,12 @@ func setJSFuncs() {
 }
 
 func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			showErrorMessage("turtle has crashed, you may need to refresh\n" + err.(error).Error())
+		}
+	}()
+
 	setJSFuncs()
 	game.SetEditorCb(setEditor)
 	game.LoadCart(`function INIT()

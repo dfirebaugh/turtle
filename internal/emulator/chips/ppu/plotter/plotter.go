@@ -1,9 +1,19 @@
 package plotter
 
-import "turtle/internal/emulator/chips/math"
+import (
+	"image/color"
+	"turtle/internal/emulator/chips/math"
+	"turtle/internal/emulator/chips/ppu/pallette"
+
+	"golang.org/x/image/colornames"
+	"tinygo.org/x/tinydraw"
+)
 
 type memory interface {
-	Put(x uint8, y uint8, c uint8)
+	Put(x uint16, y uint16, c uint8)
+	SetPixel(x, y int16, c color.RGBA)
+	Display() error
+	Size() (int16, int16)
 	Clear()
 }
 
@@ -17,94 +27,45 @@ func New(memory memory) Plotter {
 	}
 }
 
-func (p Plotter) Point(x uint8, y uint8, color uint8) {
+func (p Plotter) Point(x uint16, y uint16, color uint8) {
 	p.memory.Put(x, y, color)
 }
 
-func (p Plotter) Rect(rect math.Rect, color uint8) {
-	x0 := rect[0]
-	y0 := rect[1]
-	y1 := rect[3] + y0
-
-	for i := 0; i < int(rect[2]); i++ {
-		p.Line(math.MakeVector(x0+float64(i), y0), math.MakeVector(x0+float64(i), y1), color)
+func (p Plotter) Rect(rect math.Rect, clr uint8) {
+	color, ok := pallette.GetColor(clr).(color.RGBA)
+	if !ok {
+		color = colornames.Black
 	}
+	tinydraw.FilledRectangle(p.memory, int16(rect[0]), int16(rect[1]), int16(rect[2]), int16(rect[3]), color)
 }
-func (p Plotter) Line(v0 math.Vector, v1 math.Vector, color uint8) {
-	x := v0[0]
-	y := v0[1]
 
-	heading := v1.GetHeading(v0)
-
-	dx := math.Cos(heading)
-	dy := math.Sin(heading)
-
-	for i := 0; float64(i) < math.GetDistance(v0, v1); i++ {
-		p.memory.Put(uint8(x+(float64(i)*dx)), uint8(y+(float64(i)*dy)), color)
+func (p Plotter) Line(v0 math.Vector, v1 math.Vector, clr uint8) {
+	color, ok := pallette.GetColor(clr).(color.RGBA)
+	if !ok {
+		color = colornames.Black
 	}
+	tinydraw.Line(p.memory, int16(v0[0]), int16(v0[1]), int16(v1[0]), int16(v1[1]), color)
 }
 
-func (p Plotter) FillBottomTri(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8) {
-	invslope1 := (v1[0] - v0[0]) / (v1[1] - v0[1])
-	invslope2 := (v2[0] - v0[0]) / (v2[1] - v0[1])
-
-	curX1 := v0[0]
-	curX2 := v0[0]
-
-	for scanLineY := v0[1]; scanLineY <= v1[1]; scanLineY++ {
-		p.Line(math.MakeVector(curX1, scanLineY), math.MakeVector(curX2, scanLineY), color)
-		curX1 += invslope1
-		curX2 += invslope2
+func (p Plotter) Triangle(v0 math.Vector, v1 math.Vector, v2 math.Vector, clr uint8) {
+	color, ok := pallette.GetColor(clr).(color.RGBA)
+	if !ok {
+		color = colornames.Black
 	}
+	tinydraw.FilledTriangle(p.memory, int16(v0[0]), int16(v0[1]), int16(v1[0]), int16(v1[1]), int16(v2[0]), int16(v2[1]), color)
 }
-func (p Plotter) FillTopTri(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8) {
-	invslope1 := (v2[0] - v0[0]) / (v2[1] - v0[1])
-	invslope2 := (v2[0] - v1[0]) / (v2[1] - v1[1])
 
-	curX1 := v2[0]
-	curX2 := v2[0]
-
-	for scanLineY := v2[1]; scanLineY > v0[1]; scanLineY-- {
-		p.Line(math.MakeVector(curX1, scanLineY), math.MakeVector(curX2, scanLineY), color)
-		curX1 -= invslope1
-		curX2 -= invslope2
+func (p Plotter) Circle(c math.Circle, clr uint8) {
+	color, ok := pallette.GetColor(clr).(color.RGBA)
+	if !ok {
+		color = colornames.Black
 	}
-}
-func (p Plotter) Triangle(v0 math.Vector, v1 math.Vector, v2 math.Vector, color uint8) {
-	p.Line(v0, v1, color)
-	p.Line(v0, v2, color)
-	p.Line(v1, v2, color)
-
-	p.FillBottomTri(v0, v1, v2, color)
-	p.FillTopTri(v0, v1, v2, color)
-}
-
-func (p Plotter) CircleOutline(c math.Circle, color uint8) {
-	for i := 0; i < 360; i++ {
-		x1 := c.R * math.Cos(float64(i)*math.Pi/180)
-		y1 := c.R * math.Sin(float64(i)*math.Pi/180)
-
-		p.memory.Put(uint8(c.X+x1+c.R), uint8(c.Y+y1+c.R), color)
-	}
-}
-func (p Plotter) Circ(c math.Circle, color uint8) {
-	p.CircleDumbFill(c, color)
-	p.CircleOutline(c, color)
-}
-
-func (p Plotter) CircleFill(c math.Circle, color uint8) {
-
-}
-
-// DumbFill draws a rect inside the circle
-// it doesn't fit though :3
-func (p Plotter) CircleDumbFill(c math.Circle, color uint8) {
-	p.Rect(math.MakeRect(c.X+2, c.Y+2, c.R*2-3, c.R*2-3), color)
+	tinydraw.FilledCircle(p.memory, int16(c.X), int16(c.Y), int16(c.R*2), color)
 }
 
 func (p Plotter) RenderSprite(sprite []uint8, x, y float64) {
 	for i, color := range sprite {
-		p.Point(uint8(i%8)+uint8(x), uint8(i/8)+uint8(y), color)
+		p.Point(uint16(i%8)+uint16(x), uint16(i/8)+uint16(y), color)
 	}
 }
 

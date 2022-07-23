@@ -23,17 +23,11 @@ function UPDATE()
         a.dir = a.dir *-1
     end
     a.x= a.x +a.dir
-
-    ix, iy=INTERSECTION(0, 0, 10, 10, 8, 0, 6, 6)
-    if ix ~= ix and iy ~= iy then
-        return
-    end
-
-    print(ix, iy)
 end
 
 function RENDER()
     CLS()
+    TRIANGLE(10, 12, 180, 32, 180, 180, 1)
     RECT(64,64,10,10,1)
     LINE(0,0,SCREENW(), SCREENH(), 10)
     LINE(SCREENW()/2,0, SCREENW()/2, SCREENH(), 10)
@@ -41,4 +35,5 @@ function RENDER()
     -- CIR(a.x, a.y, a.r, a.c)
     -- TRI(10, 10, 20, 40, 64, 40, 8)
     PALLETTE()
+    
 end
