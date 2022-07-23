@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Turtle Web Emulator</title>
+    <style type="text/css" media="screen">
+        #editor {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 50vw;
+            width: 50vw;
+        }
+
+        #button-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: black;
+            height: 2rem;
+        }
+
+        #emulator-screen {
+            width: 50vw;
+        }
+
+        body {
+            background-color: black;
+            color: white;
+            width: 50vw;
+        }
+    </style>
+</head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css"
+    integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<body>
+    <div id="button-bar">
+        <button onClick="loadDefaultCart();" id="resetButton"
+            style="color: white; background-color: grey;">default</button>
+        <button onClick="toggleEditor();" id="toggleButton" style="color: white; background-color: grey;">hide</button>
+        <button onClick="save();" id="saveButton" style="color: white; background-color: grey;">save</button>
+        <button onClick="load();" id="runButton" style="color: white; background-color: grey;">Run</button>
+        <span>(ctrl+enter)</span>
+    </div>
+    <div id="editor"></div>
+    <paper-toast id="toast" text="Hello world!"></paper-toast>
+
+    <div id="emulator-screen"></div>
+
+    <script src="wasm_exec.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"
+        integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="//ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js" type="text/javascript"
+        charset="utf-8"></script>
+
+    <script>
+        const defaultCart = `local x=0
+local y=0
+local color=1
+
+print("cart running...")
+function INIT()
+    x=SCREENW()/2
+    y=SCREENH()/2
+    FPS()
+end
+function UPDATE()
+    if BTN(0) then -- up
+        y=y-1
+    end
+    if BTN(1) then -- down
+        y=y+1
+    end
+    if BTN(2) then -- left
+        x=x-1
+    end
+    if BTN(3) then -- right
+        x=x+1
+    end
+    if BTN(4) then -- Z
+        color=color+1
+    end
+    if BTN(5) then -- X
+        color=color-1
+    end
+end
+function RENDER()
+    CLR()
+    RECT(0, 0, SCREENW(), SCREENH(), 12)
+    SPR(0, 64, 80)
+    SPR(1, 73, 80)
+    SPR(2, 82, 80)
+    SPR(3, 91, 80)
+    ANIMATE(0, 30, 30, 650)
+    RECT(x, y, 10, 10, color)
+    
+    PALLETTE()
+end
+
+--startSprites
+--cddccddcddddddddddddd7ddddddddddddddddddcddddddcccddddcccccddccc
+--c88cc88c88888888888887888888888888888888c888888ccc8888ccccc88ccc
+--c22cc22c22222222222227222222222222222222c222222ccc2222ccccc22ccc
+--ceecceeceeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeceeeeeeccceeeeccccceeccc
+--ceecceeceeeeeeeeeeeee7eeeeeeeeee8888e888ceeeeeeccceeeeccccceeccc
+--endSprites
+
+`;
+
+
+        let editor = ace.edit("editor");
+        editor.setTheme("ace/theme/dracula");
+        editor.session.setMode("ace/mode/lua");
+
+        function toggleEditor() {
+            const x = document.getElementById("editor")
+            const btn = document.getElementById("toggleButton")
+            if (x.style.display === "none") {
+                x.style.display = "block";
+                btn.textContent = "hide"
+            } else {
+                x.style.display = "none";
+                btn.textContent = "show"
+            }
+        }
+        function download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+        function save() {
+            download("turtle_cart.lua", editor.getValue());
+        }
+
+        document.addEventListener('keydown', function (e) {
+            var evtobj = window.event ? event : e
+            const enterKeyCode = 13
+            const rKeyCode = 82
+            const sKeyCode = 83
+            if (evtobj.keyCode == enterKeyCode && evtobj.ctrlKey || evtobj.keyCode == rKeyCode && evtobj.ctrlKey || evtobj.keyCode == sKeyCode && evtobj.ctrlKey) e.preventDefault();
+            if (evtobj.keyCode == enterKeyCode && evtobj.ctrlKey) load();
+            if (evtobj.keyCode == rKeyCode && evtobj.ctrlKey) load();
+            if (evtobj.keyCode == sKeyCode && evtobj.ctrlKey) save();
+
+            localStorage.setItem('turtleCart', editor.getValue())
+        })
+
+        toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": false,
+            "positionClass": "toast-bottom-left",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        }
+        function showError(errorMsg) {
+            toastr["error"](errorMsg)
+        }
+        function showInfo(msg) {
+            toastr["info"](msg)
+        }
+        function showWarning(msg) {
+            toastr["warning"](msg)
+        }
+        function showSuccess(msg) {
+            toastr["success"](msg)
+        }
+
+        // Polyfill
+        if (!WebAssembly.instantiateStreaming) {
+            WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                const source = await (await resp).arrayBuffer();
+                return await WebAssembly.instantiate(source, importObject);
+            };
+        }
+
+        (async function loadAndRunGoWasm() {
+            const go = new Go();
+            const response = await fetch("./turtle.wasm");
+            const buffer = await response.arrayBuffer();
+            const result = await WebAssembly.instantiate(buffer, go.importObject)
+            go.run(result.instance)
+            const cart = new Cart()
+            cart.fetch()
+        })()
+
+        function setEditorValue(textValue) {
+            editor.setValue(textValue)
+            load();
+        }
+        async function load() {
+            console.clear()
+            loadCart(editor.getValue())
+            // showInfo("loading cart...")
+        }
+
+        function loadDefaultCart() {
+            const cart = new Cart()
+            cart.loadDefault()
+            load()
+        }
+
+        class Cart {
+            loaded = false;
+            loadDefault() {
+                setEditorValue(defaultCart);
+                showInfo("loading default cart...")
+                this.loaded = true;
+            }
+            loadFromMemory() {
+                const cart = localStorage.getItem("turtleCart")
+                if (!cart) return;
+                setEditorValue(cart)
+                showInfo("loading cart from memory...")
+                this.loaded = true;
+            }
+            async loadFromParam() {
+                const isValidUrl = (url) => {
+                    try {
+                        new URL(url);
+                    } catch (e) {
+                        showError(e);
+                        return false;
+                    }
+                    return true;
+                };
+                const params = new Proxy(new URLSearchParams(window.location.search), {
+                    get: (searchParams, prop) => searchParams.get(prop),
+                });
+                const value = params.cart;
+                if (!value) return;
+                if (!isValidUrl(value)) {
+                    showError("not a valid cart url")
+                    this.loadDefault();
+                    return;
+                }
+
+                const result = await fetch(value)
+                if (!result.ok) return showError("not a valid cart url");
+                showInfo("loading cart from url...")
+                result.text().then(text => setEditorValue(text))
+                this.loaded = true;
+            }
+            fetch() {
+                if (!this.loaded) this.loadFromParam();
+                if (!this.loaded) this.loadFromMemory();
+                if (!this.loaded) this.loadDefault();
+            }
+        }
+    </script>
+</body>
+
+</html>
