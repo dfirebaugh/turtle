@@ -31,7 +31,7 @@ end
 
 local Boundary={}
 function Boundary:new(x0, y0, x1, y1, color)
-    local this={x0=x0, y0=y0, x1=x1, y1=y1}
+    local this = {x0=x0, y0=y0, x1=x1, y1=y1}
     this.id=UID()
     Boundaries[this.id]=this
     this.color=color
@@ -65,11 +65,18 @@ local function intersection (s1, e1, s2, e2)
 end
 
 function point_within_line(p, v0, v1)
-    if p.x >= v0.x and p.x <= v1.x and p.y >= v0.y and p.y <= v1.y then
-        return true
-    end
-    return false
+    local crossproduct = (p.y - v0.y) * (v1.x - v0.x) - (p.x - v0.x) * (v1.y - v0.y)
+    if math.abs(crossproduct) > 0.0001 then return false end
+    
+    local dotproduct = (p.x - v0.x) * (v1.x - v0.x) + (p.y - v0.y)*(v1.y - v0.y)
+    if dotproduct < 0 then return false end
+    
+    local squaredlengthba = (v1.x - v0.x)*(v1.x - v0.x) + (v1.y - v0.y)*(v1.y - v0.y)
+    if dotproduct > squaredlengthba then return false end
+    
+    return true
 end
+
 
 function is_within_bounds(x, y)
     return x < SCREENW() and x > 0 and y < SCREENH() and y > 0
@@ -102,51 +109,36 @@ function Ray:new(x0, y0, dir)
     function this:grid_cast()
 
     end
-    -- quick_cast isn't entirely accurate
-    --   someof the rays miss because they are reevaluated 
-    --   on a different boundary
+
     function this:quick_cast()
-        -- this.color=7
+        local closest_intersection = nil
+        local shortest_distance = math.huge
+    
         for _, b in pairs(Boundaries) do
-            ox, oy=intersection(
+            ox, oy = intersection(
                 {x=this.x0, y=this.y0},
                 {x=this.x1, y=this.y1},
                 {x=b.x0, y=b.y0},
                 {x=b.x1, y=b.y1}
             )
-
-            if (ox ~= ox and oy ~= oy) or (ox == nil or oy == nil) then
-                return
-            end
-
-            local within_line=point_within_line(
-                    {x=ox, y=oy}, 
-                    {x=b.x0, y=b.y0}, 
-                    {x=b.x1, y=b.y1})
             
-            local longer=this:is_longer(ox, oy)
-
-            if not is_within_bounds(ox, oy) then
-                -- print(ox, oy)
-            end
-
-            -- local not_valid= ox ~= ox or oy ~= oy
-            -- print(ox, oy)
-            if within_line and not longer and is_within_bounds(ox, oy) then
-                -- this.color=1
-                this.hit_count=this.hit_count+1
-                this.x1=ox
-                this.y1=oy
+            if ox and oy and point_within_line({x=ox, y=oy}, {x=b.x0, y=b.y0}, {x=b.x1, y=b.y1}) then
+                local distance = DISTANCE(this.x0, this.y0, ox, oy)
+                if distance < shortest_distance then
+                    shortest_distance = distance
+                    closest_intersection = {x = ox, y = oy}
+                end
             end
         end
-        if this.hit_count > 0 then
-            this.color=this.hit_count
-        end
-        
-        if this.hit_count == 0 then
-            this.color=8
+    
+        if closest_intersection then
+            this.hit_count = this.hit_count + 1
+            this.x1 = closest_intersection.x
+            this.y1 = closest_intersection.y
         end
     end
+
+
     function this:cast(x0, y0, dir)
         -- reset the ray length
         this:reset()
@@ -172,10 +164,11 @@ function Entity:new(x, y)
     local this={x=x, y=y, r=5, speed=1, dir=RND(PI())}
     this.rays={}
 
-    -- table.insert(this.rays, Ray:new(this.x, this.y, 16))
-    for i=0, 10 do
-        table.insert(this.rays, Ray:new(this.x, this.y, i))
+    for i=0, 350, 10 do
+        local angle = i % 360
+        table.insert(this.rays, Ray:new(this.x, this.y, angle))
     end
+
 
     function this:render()
         for _, r in pairs(this.rays) do
